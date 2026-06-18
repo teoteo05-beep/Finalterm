@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planner — Collaborative Weekly Space</title>
+  <meta name="description" content="Planner — A minimalist weekly todo list with team space." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <style>
+    /* ════════════════════════════════
+       DESIGN TOKENS (EARTHY DARK THEME)
+    ════════════════════════════════ */
+    :root, [data-theme="dark"] {
+      --bg:          #24211a;
+      --paper:       #2b261d;
+      --ink:         #e1dbcd;
+      --ink-soft:    #999081;
+      --ink-faint:   #6e6659;
+      --line:        #3a3428;
+      --line-strong: #4f4737;
+      --accent:      #bd5338;
+      --accent-soft: #3d241e;
+      --good:        #5b8254;
+      --good-soft: #1f2b1d;
+      --shadow:      0 4px 20px rgba(0, 0, 0, 0.25);
+      --r:           10px;
+      --t:           all .2s ease;
+    }
+
+    [data-theme="light"] {
+      --bg:          #f4f1ea;
+      --paper:       #fbfaf6;
+      --ink:         #1c1a17;
+      --ink-soft:    #56514a;
+      --ink-faint:   #928b80;
+      --line:        #e2ddd2;
+      --line-strong: #d2ccbe;
+      --accent:      #b5482e;
+      --accent-soft: #e9d9d2;
+      --good:        #4f7a4a;
+      --good-soft:   #dde7da;
+      --shadow:      0 1px 2px rgba(28,26,23,.04), 0 8px 24px -12px rgba(28,26,23,.14);
+    }
+
+    /* ════════════════════════════════
+       RESET & BASE ELEMENTS
+    ════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Newsreader', Georgia, serif;
+      font-size: 16px;
+      background: var(--bg);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      background-image: radial-gradient(rgba(225,219,205,.015) 1px, transparent 1px);
+      background-size: 8px 8px;
+      transition: background .25s, color .25s;
+    }
+    button { cursor: pointer; font-family: inherit; border: none; background: none; color: inherit; }
+    input, select, textarea { font-family: inherit; color: inherit; border: none; outline: none; background: none; }
+    ul { list-style: none; }
+    .hidden { display: none !important; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 99px; }
+
+    /* ════════════════════════════════
+       AUTH SCREEN STYLE
+    ════════════════════════════════ */
+    #authScreen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .auth-card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: 34px 28px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      position: relative;
+    }
+    .auth-brand { text-align: center; }
+    .auth-logo { font-size: 32px; margin-bottom: 4px; }
+    .auth-brand h1 {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: 26px;
+      letter-spacing: -.02em;
+    }
+    .auth-brand h1 span { color: var(--accent); }
+    .auth-brand p { font-size: 13.5px; color: var(--ink-soft); margin-top: 3px; }
+
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: var(--bg);
+      padding: 3px;
+      gap: 3px;
+    }
+    .auth-tab {
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 13.5px;
+      font-weight: 500;
+      text-align: center;
+      transition: var(--t);
+    }
+    .auth-tab.active { background: var(--paper); box-shadow: var(--shadow); color: var(--ink); }
+
+    .auth-form { display: flex; flex-direction: column; gap: 12px; }
+    .auth-field { display: flex; flex-direction: column; gap: 5px; }
+    .auth-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--ink-faint);
+    }
+    .auth-input {
+      background: var(--bg);
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      width: 100%;
+      transition: var(--t);
+    }
+    .auth-input:focus { border-color: var(--accent); background: var(--paper); }
+
+    .auth-notice {
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      line-height: 1.5;
+      display: none;
+    }
+    .auth-notice.show { display: block; }
+    .auth-notice.error { background: var(--accent-soft); border: 1px solid var(--accent); color: var(--accent); }
+    .auth-notice.success { background: var(--good-soft); border: 1px solid var(--good); color: var(--good); }
+
+    .auth-theme-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      font-size: 16px;
+      color: var(--ink-faint);
+      padding: 4px;
+    }
+
+    /* ════════════════════════════════
+       BUTTONS SYSTEM
+    ════════════════════════════════ */
+    .btn {
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      transition: var(--t);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: .5; pointer-events: none; }
+    .btn-primary { background: var(--ink); color: var(--paper); }
+    .btn-primary:hover { background: var(--accent); color: #fff; }
+    .btn-ghost { color: var(--ink-soft); }
+    .btn-ghost:hover { color: var(--ink); background: var(--line); }
+    .btn-danger { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); }
+    .btn-danger:hover { background: var(--accent); color: #fff; }
+    .btn-full { width: 100%; justify-content: center; }
+    .btn-tool {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: 6px 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: var(--paper);
+      color: var(--ink-soft);
+      box-shadow: var(--shadow);
+      transition: var(--t);
+    }
+    .btn-tool:hover { border-color: var(--ink-soft); color: var(--ink); }
+
+    .spin {
+      width: 12px; height: 12px;
+      border: 1.5px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ════════════════════════════════
+       APP LAYOUT & HEADER
+    ════════════════════════════════ */
+    #appScreen {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      min-height: 100vh;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      padding: 18px 24px 10px 24px;
+      background: var(--bg);
+    }
+    .app-brand {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: 24px;
+      letter-spacing: -.02em;
+    }
+
+    .header-center {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: 0px; 
+    }
+    .planning-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .week-nav-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      padding: 3px 14px;
+      min-width: 190px;
+      background: var(--paper);
+    }
+    .week-nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+    .week-nav-btn {
+      font-size: 16px;
+      color: var(--ink-soft);
+      padding: 0 4px;
+      transition: var(--t);
+    }
+    .week-nav-btn:hover { color: var(--ink); }
+    .week-nav-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      color: var(--ink);
+      font-weight: 500;
+    }
+    .week-subtext {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5px;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-top: -1px;
+    }
+
+    .header-tools { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--ink-soft);
+    }
+    .user-avatar {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--line-strong);
+      display: grid; place-items: center;
+      font-size: 10px; font-weight: 600;
+    }
+    .user-email-txt {
+      max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    .progress-bar-container {
+      padding: 4px 24px 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .progress-line-track {
+      height: 6px;
+      border-radius: 4px;
+      background: var(--line-strong);
+      flex-grow: 1;
+      margin-right: 16px;
+      position: relative;
+    }
+    .progress-fill {
+      position: absolute; left: 0; top: 0; height: 100%;
+      border-radius: 4px;
+      background: var(--good); width: 0%; transition: width .4s ease;
+    }
+    .progress-stats-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-soft);
+      white-space: nowrap;
+    }
+
+    .app-body {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      padding: 0 24px 24px 24px;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 960px) {
+      .app-body { grid-template-columns: 1fr; }
+    }
+
+    /* ════════════════════════════════
+       SIDEBAR COLUMNS
+    ════════════════════════════════ */
+    .sidebar { display: flex; flex-direction: column; gap: 20px; }
+    .sidebar-section-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--ink-faint);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .search-wrap { position: relative; }
+    .search-wrap-icon {
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      font-size: 12px; color: var(--ink-faint); pointer-events: none;
+    }
+    .search-input {
+      width: 100%; background: var(--paper); border: 1px solid var(--line); border-radius: 6px;
+      padding: 7px 10px 7px 28px; font-size: 13.5px; transition: var(--t);
+    }
+    .search-input:focus { border-color: var(--line-strong); }
+
+    .filter-items { display: flex; flex-direction: column; gap: 2px; }
+    .filter-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 8px; border-radius: 6px; font-size: 14px; transition: var(--t); text-align: left;
+    }
+    .filter-item:hover { background: var(--paper); }
+    .filter-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+    .filter-count { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-faint); }
+
+    .list-items { display: flex; flex-direction: column; gap: 2px; }
+    .list-item {
+      display: flex; align-items: center; gap: 8px; padding: 7px 8px;
+      border-radius: 6px; font-size: 13.5px; transition: var(--t); text-align: left;
+    }
+    .list-item:hover { background: var(--paper); }
+    .list-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+    .list-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .list-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-grow: 1; }
+    .list-count { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-faint); }
+    .sidebar-btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .add-project-dash {
+      border: 1px dashed var(--line-strong); border-radius: 6px; padding: 10px;
+      text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em; transition: var(--t); width: 100%;
+    }
+    .add-project-dash:hover { border-color: var(--ink-soft); color: var(--ink); background: rgba(255,255,255,0.01); }
+
+    /* ════════════════════════════════
+       MAIN PLANNER & WORKSPACE
+    ════════════════════════════════ */
+    .planner { display: flex; flex-direction: column; gap: 12px; }
+    
+    .onboarding-card {
+      background: var(--paper); border: 1px solid var(--line); border-radius: var(--r);
+      padding: 40px; max-width: 680px; box-shadow: var(--shadow);
+      display: flex; flex-direction: column; gap: 24px; margin-top: 4px;
+    }
+    .onboarding-header h2 { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 500; margin-bottom: 6px; }
+    .onboarding-header p { font-size: 15px; color: var(--ink-soft); }
+    .step-list { display: flex; flex-direction: column; gap: 20px; }
+    .step-item { display: flex; gap: 14px; }
+    .step-num {
+      width: 22px; height: 22px; border: 1px solid var(--line-strong); border-radius: 4px;
+      display: grid; place-items: center; font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--accent); flex-shrink: 0; margin-top: 2px;
+    }
+    .step-content h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .step-content p { font-size: 13.5px; color: var(--ink-soft); }
+
+    .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; align-items: start; }
+    @media (max-width: 1400px) { .days-grid { grid-template-columns: repeat(4, 1fr); } }
+    @media (max-width: 1024px) { .days-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px)  { .days-grid { grid-template-columns: 1fr; } }
+
+    .day-col {
+      background: var(--paper); border: 1px solid var(--line); border-radius: var(--r);
+      box-shadow: var(--shadow); display: flex; flex-direction: column; min-height: 300px; transition: border-color .2s;
+    }
+    .day-col.today { border-color: var(--line-strong); background-image: linear-gradient(to bottom, rgba(189,83,56,.01), transparent 80px); }
+    .day-col-head { padding: 12px 14px 8px; display: flex; align-items: baseline; justify-content: space-between; }
+    .day-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--ink-soft); letter-spacing: .02em; }
+    .day-col.today .day-name { color: var(--accent); }
+    .day-num { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; }
+    .day-col.today .day-num { color: var(--accent); }
+    
+    .day-col-body { padding: 8px; display: flex; flex-direction: column; gap: 7px; flex-grow: 1; }
+    .day-col-foot { padding: 7px 8px; border-top: 1px solid rgba(255,255,255,0.01); }
+    
+    .add-task-btn {
+      width: 100%; text-align: left; font-size: 12.5px; color: var(--ink-faint);
+      padding: 6px 8px; border-radius: 6px; transition: var(--t); display: flex; align-items: center; gap: 6px;
+    }
+    .add-task-btn:hover { background: var(--bg); color: var(--ink-soft); }
+
+    /* Task Item Card UI */
+    .task-card {
+      background: var(--paper); border: 1px solid var(--line); border-radius: 6px;
+      padding: 10px 10px 8px; box-shadow: 0 1px 3px rgba(0,0,0,.05);
+      display: flex; flex-direction: column; gap: 6px; cursor: pointer; position: relative; transition: var(--t);
+    }
+    .task-card:hover { border-color: var(--line-strong); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+    .task-card.done { opacity: .5; }
+    .task-top { display: flex; align-items: flex-start; gap: 8px; }
+    
+    .task-check {
+      width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--ink-faint);
+      margin-top: 2.5px; flex-shrink: 0; display: grid; place-items: center; transition: var(--t);
+    }
+    .task-card:hover .task-check { border-color: var(--ink-soft); }
+    .task-card.done .task-check { border-color: var(--good); background: var(--good); }
+    .task-check::after {
+      content: ''; width: 4px; height: 7px; border: solid #fff; border-width: 0 1.5px 1.5px 0;
+      transform: rotate(45deg) translate(-0.5px, -1px); opacity: 0;
+    }
+    .task-card.done .task-check::after { opacity: 1; }
+
+    .task-title { font-size: 14px; line-height: 1.4; color: var(--ink); flex-grow: 1; word-break: break-word; }
+    .task-card.done .task-title { text-decoration: line-through; color: var(--ink-soft); }
+    
+    .task-meta { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-left: 24px; }
+    .task-tag { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 500; padding: 1px 5px; border-radius: 4px; text-transform: uppercase; }
+    .task-time-badge { font-family: 'JetBrains Mono', monospace; font-size: 9px; background: var(--accent-soft); color: var(--accent); padding: 1px 5px; border-radius: 4px; }
+    .task-notes-indicator { font-size: 11px; color: var(--ink-faint); display: inline-flex; align-items: center; }
+
+    .task-acts { position: absolute; right: 4px; top: 4px; display: flex; gap: 2px; opacity: 0; transition: opacity .15s; }
+    .task-card:hover .task-acts { opacity: 1; }
+    .chip-act {
+      width: 18px; height: 18px; border-radius: 4px; background: var(--paper);
+      border: 1px solid var(--line); color: var(--ink-faint); display: grid; place-items: center; font-size: 10px; transition: var(--t);
+    }
+    .chip-act:hover { background: var(--line-strong); color: var(--ink); }
+    .chip-act.del:hover { background: var(--accent-soft); color: var(--accent); }
+
+    .move-pop {
+      position: absolute; z-index: 50; top: 24px; right: 4px; background: var(--paper);
+      border: 1px solid var(--line-strong); border-radius: 6px; padding: 8px; box-shadow: var(--shadow);
+      display: flex; flex-direction: column; gap: 6px; width: 144px;
+    }
+    .move-pop-title { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-faint); }
+    .move-pop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+    .move-pop-day { padding: 4px; background: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; text-align: center; border-radius: 4px; }
+    .move-pop-day:hover { background: var(--line-strong); color: var(--ink); }
+
+    /* ════════════════════════════════
+       OVERLAYS & WINDOW MODALS
+    ════════════════════════════════ */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(20, 18, 14, 0.45);
+      backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+      z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal {
+      background: var(--paper); border: 1px solid var(--line); border-radius: var(--r);
+      box-shadow: var(--shadow); width: 100%; max-width: 420px;
+      display: flex; flex-direction: column; animation: modalIn .2s ease-out; overflow: hidden;
+    }
+    @keyframes modalIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    
+    .modal-head { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+    .modal-head h2 { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; }
+    .modal-close { font-size: 18px; color: var(--ink-faint); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; }
+    .modal-close:hover { background: var(--bg); color: var(--ink); }
+    
+    .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; max-height: 75vh; overflow-y: auto; }
+    .modal-foot { padding: 14px 20px; background: var(--bg); border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+    
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-faint); }
+    .form-input { background: var(--bg); border: 1px solid var(--line-strong); border-radius: 6px; padding: 8px 12px; font-size: 14px; width: 100%; transition: var(--t); color-scheme: dark; }
+    .form-input:focus { border-color: var(--accent); background: var(--paper); }
+    
+    .color-swatches { display: flex; gap: 8px; flex-wrap: wrap; padding: 2px 0; }
+    .swatch { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; transition: var(--t); cursor: pointer; }
+    .swatch.active { border-color: var(--ink); transform: scale(1.1); }
+
+    .modal-sm { max-width: 320px; }
+    .modal-sm .modal-body { text-align: center; font-size: 14.5px; color: var(--ink-soft); padding: 24px; line-height: 1.5; }
+
+    .meta-info-box {
+      background: var(--bg); border: 1px solid var(--line); padding: 10px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft);
+      display: flex; flex-direction: column; gap: 4px;
+    }
+
+    /* ════════════════════════════════
+       TOAST NOTIFICATIONS
+    ════════════════════════════════ */
+    .toast-wrap { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 6px; align-items: center; pointer-events: none; }
+    .toast { padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow); animation: toastIn .2s ease; white-space: nowrap; pointer-events: auto; }
+    .toast.ok { background: var(--good-soft); border: 1px solid var(--good); color: var(--good); }
+    .toast.err { background: var(--accent-soft); border: 1px solid var(--accent); color: var(--accent); }
+    .toast.info { background: var(--paper); border: 1px solid var(--line-strong); color: var(--ink-soft); }
+    .toast.out { animation: toastOut .2s ease forwards; }
+    @keyframes toastIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes toastOut { to { transform: translateY(-4px); opacity: 0; } }
+  </style>
+</head>
+<body>
+
+  <!-- AUTH SCREEN CONTAINER -->
+  <div id="authScreen">
+    <div class="auth-card">
+      <button class="auth-theme-btn" id="authThemeBtn" title="Toggle theme">🌙</button>
+      
+      <div class="auth-brand">
+        <div class="auth-logo">📓</div>
+        <p style="margin-top: 8px;">A minimalist space for your week</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLoginBtn">Sign In</button>
+        <button class="auth-tab" id="tabSignupBtn">Sign Up</button>
+      </div>
+
+      <form class="auth-form" id="authForm" onsubmit="return false;">
+        <div class="auth-field">
+          <label class="auth-label">Email address</label>
+          <input type="email" class="auth-input" id="authEmail" required placeholder="name@example.com" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">Password</label>
+          <input type="password" class="auth-input" id="authPassword" required placeholder="••••••••" minlength="6" />
+        </div>
+
+        <div class="auth-notice" id="authNotice"></div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="authSubmitBtn">
+          <span>Sign In</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN APP APPLICATION SCREEN -->
+  <div id="appScreen" class="hidden">
+    
+    <!-- TOP APP HEADER BAR -->
+    <header class="app-header">
+      <div class="app-brand"></div>
+
+      <div class="header-center">
+        <span class="planning-tag">📅 Planning For</span>
+        <div class="week-nav-container">
+          <div class="week-nav-row">
+            <button class="week-nav-btn" id="weekPrev" title="Previous week">‹</button>
+            <span class="week-nav-label" id="weekLabel">...</span>
+            <button class="week-nav-btn" id="weekNext" title="Next week">›</button>
+          </div>
+          <span class="week-subtext">Week Range</span>
+        </div>
+        <button class="btn-tool" id="weekTodayBtn" title="Jump to current week">This Week</button>
+      </div>
+
+      <div class="header-tools">
+        <button class="btn btn-ghost" id="themeBtn" title="Toggle dark mode" style="font-size: 14px; padding: 4px;">🌙</button>
+        
+        <div class="user-chip">
+          <div class="user-avatar" id="userAvatar">?</div>
+          <div class="user-email-txt" id="userEmail">...</div>
+          <span style="font-size: 8px; margin-left: 1px; color: var(--ink-faint);">▼</span>
+        </div>
+
+        <button class="btn-tool" id="statsBtn">Stats</button>
+        <button class="btn-tool" id="archiveBtn">Archive</button>
+        <button class="btn-tool" id="logoutBtn">End Week ↺</button>
+      </div>
+    </header>
+
+    <!-- FULL WIDTH WEEK PROGRESS TRACKBAR BAR -->
+    <div class="progress-bar-container">
+      <div class="progress-line-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-stats-text" id="progressPct">0/0 • 0%</div>
+    </div>
+
+    <!-- CORE COLUMN SPLIT LAYER BODY -->
+    <div class="app-body">
+      
+      <!-- SIDEBAR COMPONENT -->
+      <aside class="sidebar">
+        <div class="search-wrap">
+          <span class="search-wrap-icon">🔍</span>
+          <input type="text" class="search-input" id="searchInput" placeholder="Search tasks..." />
+        </div>
+
+        <div>
+          <div class="sidebar-section-title">Filters</div>
+          <div class="filter-items">
+            <button class="filter-item active" data-f="all">
+              <span>📓 All tasks</span>
+              <span class="filter-count" id="cntAll">0</span>
+            </button>
+            <button class="filter-item" data-f="pending">
+              <span>⏳ Pending</span>
+              <span class="filter-count" id="cntPending">0</span>
+            </button>
+            <button class="filter-item" data-f="done">
+              <span>✅ Done</span>
+              <span class="filter-count" id="cntDone">0</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <div class="sidebar-section-title">Personal Projects</div>
+          <div class="list-items" id="listItems"></div>
+          <button class="add-project-dash" id="addListBtn" style="margin-top: 10px;">
+            + Add Project
+          </button>
+        </div>
+
+      </aside>
+
+      <!-- DATA PLATFORM MAIN WORKSPACE PANELS -->
+      <main class="planner">
+        <div class="sidebar-section-title" id="workspaceTitle">This Week</div>
+        
+        <!-- INTUITIVE ONBOARDING STEPS CARD CONTAINER -->
+        <div class="onboarding-card hidden" id="onboardingCard">
+          <div class="onboarding-header">
+            <h2>Good morning. Let's plan your week.</h2>
+            <p>Three quick steps and your days fill themselves in.</p>
+          </div>
+
+          <div class="step-list">
+            <div class="step-item">
+              <div class="step-num">1</div>
+              <div class="step-content">
+                <h3>Make a project</h3>
+                <p>Create a personal list to start planning your week.</p>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="onboardingActionBtn" style="align-self: flex-start; margin-top: 6px; padding: 10px 20px;">
+            + Add Your First Project
+          </button>
+        </div>
+
+        <!-- 7-DAYS GRID DATA VIEWPORT BOARD -->
+        <div class="days-grid" id="daysGrid"></div>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- OVERLAYS & MODALS LAYERS WINDOWS -->
+  <div class="overlay hidden" id="taskOverlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="taskModalTitle">New Task</h2>
+        <button class="modal-close" id="taskClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Task description</label>
+          <input type="text" class="form-input" id="taskTitleInput" placeholder="What needs to be done?" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Assign to Project</label>
+          <select class="form-input" id="taskSubjSelect"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Due Time (For Deadline Reminders)</label>
+          <input type="time" class="form-input" id="taskTimeInput" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes / Context details</label>
+          <textarea class="form-input" id="taskNotesInput" rows="3" placeholder="Add additional references..."></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" id="taskCancel">Cancel</button>
+        <button class="btn btn-danger hidden" id="taskDeleteBtn">Delete</button>
+        <button class="btn btn-primary" id="taskSaveBtn">Save Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERSONAL LIST MODAL -->
+  <div class="overlay hidden" id="listOverlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Create a Project List</h2>
+        <button class="modal-close" id="listClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Project name</label>
+          <input type="text" class="form-input" id="listNameInput" placeholder="Work, Personal, Studies..." required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Theme color marker</label>
+          <div class="color-swatches" id="colorSwatches"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" id="listCancel">Cancel</button>
+        <button class="btn btn-primary" id="listSaveBtn">Create List</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERSONAL LIST MODAL -->
+
+  <!-- CONFIRM OVERLAY -->
+  <div class="overlay hidden" id="confirmOverlay">
+    <div class="modal modal-sm">
+      <div class="modal-body" id="confirmMessage">Are you completely sure you want to perform this action?</div>
+      <div class="modal-foot" style="background:transparent; padding-top:0;">
+        <button class="btn btn-ghost" id="confirmNo">No</button>
+        <button class="btn btn-primary" id="confirmYes">Yes</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <!-- APPLICATION CORE ARCHITECTURE ENGINE LOGIC -->
+  <script>
+    /* ============================================================
+       SUPABASE DATA CONFIGURATION INITIALIZATION
+    ============================================================ */
+    const SUPABASE_URL = "https://xemhjbfuxsqbslfshswg.supabase.co"; 
+    const SUPABASE_ANON_KEY = "sb_publishable_hh6fD9DywNlsKtUweNHY3Q_XLnKlfHN";
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    /* ============================================================
+       CONSTANTS & GLOBAL DATA STATES DECLARES
+    ============================================================ */
+    const DAY_NAMES  = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const DAY_SHORTS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const LIST_COLORS = ['#bd5338', '#5b8254', '#2d5a88', '#884488', '#caa030', '#448888', '#885522', '#556b3c', '#7a3050', '#3a6a8a'];
+
+    let tasks = [];
+    let lists = []; 
+    let user = null;
+    let weekOffset = 0;
+    let filterMode = 'all'; 
+    let listFilter = null; 
+    let editTaskId = null;
+    let selColor = LIST_COLORS[0];
+    let confirmCb = null;
+    let realtimeCh = null;
+    let movingTaskId = null;
+    let notifiedTasks = new Set(); 
+
+    const $ = id => document.getElementById(id);
+    const pad = n => String(n).padStart(2,'0');
+    const todayStr = () => toDateStr(new Date());
+    
+    function toDateStr(d) { 
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; 
+    }
+    
+    function getMonday(date) {
+      const d = new Date(date);
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(d.setDate(diff));
+    }
+
+    function formatWeekRange(mon) {
+      const sun = new Date(mon);
+      sun.setDate(mon.getDate() + 6);
+      return `${mon.getDate()} thg ${mon.getMonth()+1} - ${sun.getDate()} thg ${sun.getMonth()+1}`;
+    }
+
+    function confirmAction(msg, cb) {
+      $('confirmMessage').textContent = msg;
+      confirmCb = cb;
+      showOverlay('confirmOverlay');
+    }
+
+    /* ============================================================
+       THEME MANAGEMENT CONTROLLER
+    ============================================================ */
+    function initTheme() {
+      const saved = localStorage.getItem('tido-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', saved);
+      updateThemeIcons(saved);
+    }
+
+    function toggleTheme() {
+      const curr = document.documentElement.getAttribute('data-theme');
+      const next = curr === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('tido-theme', next);
+      updateThemeIcons(next);
+    }
+
+    function updateThemeIcons(theme) {
+      const ico = theme === 'dark' ? '☀️' : '🌙';
+      $('themeBtn').textContent = ico;
+      $('authThemeBtn').textContent = ico;
+    }
+
+    $('themeBtn').onclick = toggleTheme;
+    $('authThemeBtn').onclick = toggleTheme;
+
+    /* ============================================================
+       APPLICATION LIFECYCLE INITIALIZER & AUTH TRACKING
+    ============================================================ */
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      
+      db.auth.onAuthStateChange((event, session) => {
+        if (session) {
+          user = session.user;
+          $('userEmail').textContent = user.email.split('@')[0].substring(0, 5);
+          $('userAvatar').textContent = user.email.charAt(0).toUpperCase();
+          $('authScreen').classList.add('hidden');
+          $('appScreen').classList.remove('hidden');
+          loadAll();
+          subscribeRealtime();
+          startNotificationDaemon();
+        } else {
+          user = null;
+          unsubscribeRealtime();
+          $('appScreen').classList.add('hidden');
+          $('authScreen').classList.remove('hidden');
+        }
+      });
+    });
+
+    /* ============================================================
+       DATABASE SYNCHRONIZATION ENGINE
+    ============================================================ */
+    async function loadAll() {
+      if (!user) return;
+      await Promise.all([loadLists(), loadTasks()]);
+      renderAll();
+    }
+
+    async function loadLists() {
+      const { data, error } = await db.from('subjects').select('*').order('name', { ascending: true });
+      if (!error && data) lists = data;
+    }
+
+    async function loadTasks() {
+      const { data, error } = await db.from('tasks').select('*').eq('user_id', user.id).order('due_time', { ascending: true });
+      if (!error && data) tasks = data;
+    }
+
+    function subscribeRealtime() {
+      if (realtimeCh) db.removeChannel(realtimeCh);
+      realtimeCh = db.channel('tido-rt-v2')
+        .on('postgres_changes', { event:'*', schema:'public', table:'tasks' }, () => loadAll())
+        .on('postgres_changes', { event:'*', schema:'public', table:'subjects' }, () => loadAll())
+        .subscribe();
+    }
+
+    function unsubscribeRealtime() {
+      if (realtimeCh) db.removeChannel(realtimeCh);
+    }
+
+    /* ============================================================
+       UI PRESENTATION LAYER RENDER METHODS
+    ============================================================ */
+    function renderAll() {
+      renderWeekLabel();
+      renderSidebar();
+      renderProgress();
+      renderGrid();
+    }
+
+    function renderWeekLabel() {
+      const base = new Date();
+      base.setDate(base.getDate() + weekOffset * 7);
+      $('weekLabel').textContent = formatWeekRange(getMonday(base));
+    }
+
+    function renderSidebar() {
+      const base = new Date();
+      base.setDate(base.getDate() + weekOffset * 7);
+      const monStr = toDateStr(getMonday(base));
+      const sun = getMonday(base); sun.setDate(sun.getDate() + 6);
+      const sunStr = toDateStr(sun);
+
+      const weekTasks = tasks.filter(t => t.date >= monStr && t.date <= sunStr);
+      
+      $('cntAll').textContent = weekTasks.length;
+      $('cntPending').textContent = weekTasks.filter(t => !t.done).length;
+      $('cntDone').textContent = weekTasks.filter(t => t.done).length;
+
+      // Personal projects
+      const listContainer = $('listItems');
+      listContainer.innerHTML = '';
+      lists.forEach(l => {
+        const count = weekTasks.filter(t => t.subject_id === l.id).length;
+        const btn = document.createElement('button');
+        btn.className = `list-item ${listFilter === l.id ? 'active' : ''}`;
+        btn.onclick = () => { listFilter = (listFilter === l.id) ? null : l.id; renderAll(); };
+        btn.innerHTML = `<span class="list-dot" style="background:${l.color}"></span><span class="list-name">${escapeHtml(l.name)}</span><span class="list-count">${count}</span>`;
+        listContainer.appendChild(btn);
+      });
+    }
+
+function renderProgress() {
+  // 1. Lấy ra các phần tử HTML cần cập nhật dữ liệu trên giao diện
+  const progressFill = document.getElementById('progressFill');
+  const progressPct = document.getElementById('progressPct');
+  
+  if (!progressFill || !progressPct) return; // Nếu chưa tải xong giao diện thì dừng lại
+
+  // 2. Xác định phạm vi ngày trong tuần hiện tại dựa trên weekOffset của ứng dụng bạn
+  const base = new Date();
+  base.setDate(base.getDate() + (typeof weekOffset !== 'undefined' ? weekOffset : 0) * 7);
+  
+  // Hàm bổ trợ lấy ngày Thứ Hai đầu tuần một cách an toàn
+  const getMonday = (d) => {
+    const date = new Date(d);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(date.setDate(diff));
+  };
+  
+  const mon = getMonday(base);
+  const sun = new Date(mon);
+  sun.setDate(mon.getDate() + 6);
+
+  // Định dạng ngày thành chuỗi YYYY-MM-DD để so khớp dữ liệu mảng tasks của bạn
+  const toDateStr = (d) => d.toISOString().split('T')[0];
+  const monStr = toDateStr(mon);
+  const sunStr = toDateStr(sun);
+
+  // 3. Lọc toàn bộ danh sách công việc thuộc tuần đang xem
+  // Lưu ý: Thay đổi biến 'tasks' bên dưới nếu mảng lưu trữ task của bạn tên là khác (ví dụ: state.tasks)
+  const currentWeekTasks = (typeof tasks !== 'undefined' ? tasks : []).filter(t => {
+    return t.date >= monStr && t.date <= sunStr;
+  });
+
+  const total = currentWeekTasks.length;
+  const doneCount = currentWeekTasks.filter(t => t.done).length;
+  
+  // 4. Tính toán tỷ lệ phần trăm hoàn thành (%)
+  const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+
+  // 5. Cập nhật chính xác lên giao diện theo đúng định dạng "X/Y • P%" của bạn
+  progressFill.style.width = `${pct}%`;
+  progressPct.textContent = `${doneCount}/${total} • ${pct}%`;
+}
+
+    function renderGrid() {
+      if (lists.length === 0) {
+        $('onboardingCard').classList.remove('hidden');
+        $('daysGrid').classList.add('hidden');
+        return;
+      }
+      $('onboardingCard').classList.add('hidden');
+      $('daysGrid').classList.remove('hidden');
+
+      const base = new Date();
+      base.setDate(base.getDate() + weekOffset * 7);
+      const monday = getMonday(base);
+      
+      const grid = $('daysGrid');
+      grid.innerHTML = '';
+
+      for (let i = 0; i < 7; i++) {
+        const day = new Date(monday);
+        day.setDate(monday.getDate() + i);
+        const ds = toDateStr(day);
+        const isToday = ds === todayStr();
+        const searchQuery = ($('searchInput').value || '').toLowerCase();
+
+        const dayTasks = tasks.filter(t => {
+          if (t.date !== ds) return false;
+          if (searchQuery && !t.title.toLowerCase().includes(searchQuery)) return false;
+          if (listFilter && t.subject_id !== listFilter) return false;
+          if (filterMode === 'pending') return !t.done;
+          if (filterMode === 'done') return t.done;
+          return true;
+        });
+
+        // Trang cá nhân luôn hiện nút thêm task
+        const showAddButton = true;
+
+        const col = document.createElement('div');
+        col.className = `day-col ${isToday ? 'today' : ''}`;
+        col.innerHTML = `
+          <div class="day-col-head">
+            <span class="day-name">${DAY_SHORTS[i]}</span>
+            <span class="day-num">${day.getDate()}</span>
+          </div>
+          <div class="day-col-body" data-date="${ds}"></div>
+          <div class="day-col-foot ${showAddButton ? '' : 'hidden'}">
+            <button class="add-task-btn" onclick="openNewTask('${ds}')">＋ Add task</button>
+          </div>
+        `;
+
+        const body = col.querySelector('.day-col-body');
+        dayTasks.forEach(t => {
+          const card = document.createElement('div');
+          card.className = `task-card ${t.done ? 'done' : ''}`;
+          card.onclick = () => openEditTask(t.id);
+
+          let tagHtml = '';
+          if (t.subject_id) {
+            const l = lists.find(x => x.id === t.subject_id);
+            if (l) tagHtml = `<span class="task-tag" style="background:${l.color}22; color:${l.color};">${escapeHtml(l.name)}</span>`;
+          }
+
+          const timeHtml = t.due_time ? `<span class="task-time-badge">⏰ ${t.due_time.substring(0,5)}</span>` : '';
+          const notesIndicator = t.notes ? `<span class="task-notes-indicator" title="${escapeHtml(t.notes)}">📝</span>` : '';
+
+          card.innerHTML = `
+            <div class="task-top">
+              <div class="task-check"></div>
+              <span class="task-title">${escapeHtml(t.title)}</span>
+            </div>
+            <div class="task-meta">${tagHtml} ${timeHtml} ${notesIndicator}</div>
+            <div class="task-acts">
+              <button class="chip-act move-btn" title="Move Day">📅</button>
+              <button class="chip-act del del-btn" title="Delete Task">✕</button>
+            </div>
+          `;
+
+          // Attach listeners safely — no inline onclick strings
+          card.querySelector('.task-check').addEventListener('click', e => {
+            e.stopPropagation();
+            toggleTaskStatus(t.id);
+          });
+          card.querySelector('.move-btn').addEventListener('click', e => {
+            e.stopPropagation();
+            triggerMoveTaskPopover(t.id, e);
+          });
+          card.querySelector('.del-btn').addEventListener('click', e => {
+            e.stopPropagation();
+            quickDeleteTask(t.id);
+          });
+
+          body.appendChild(card);
+        });
+        grid.appendChild(col);
+      }
+    }
+
+    /* ============================================================
+       TASK WINDOW MODAL CONTROLLER & ASSIGNEE MANIPULATION
+    ============================================================ */
+    let targetTaskDate = '';
+
+    function populateSpaceDropdown(selectedId = null) {
+      const select = $('taskSubjSelect');
+      select.innerHTML = '';
+      
+      const optNone = document.createElement('option');
+      optNone.value = '';
+      optNone.textContent = '-- No Category / Personal --';
+      select.appendChild(optNone);
+
+      // Add personal lists
+      lists.forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = `personal:${l.id}`;
+        opt.textContent = `📁 ${l.name}`;
+        if (l.id === selectedId) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    window.openNewTask = function(dateStr) {
+      editTaskId = null;
+      targetTaskDate = dateStr;
+      $('taskModalTitle').textContent = 'New Task';
+      $('taskTitleInput').value = '';
+      $('taskNotesInput').value = '';
+      $('taskTimeInput').value = '';
+      $('taskDeleteBtn').classList.add('hidden');
+      
+      let preselectId = listFilter;
+      populateSpaceDropdown(preselectId);
+      
+      showOverlay('taskOverlay');
+      $('taskTitleInput').focus();
+    };
+
+    window.openEditTask = function(id) {
+      const t = tasks.find(x => x.id === id);
+      if (!t) return;
+      
+      editTaskId = id;
+      $('taskModalTitle').textContent = 'Edit Task';
+      $('taskTitleInput').value = t.title;
+      $('taskTitleInput').disabled = false;
+      $('taskNotesInput').value = t.notes || '';
+      $('taskTimeInput').value = t.due_time || '';
+      $('taskTimeInput').disabled = false;
+      
+      $('taskDeleteBtn').classList.remove('hidden');
+
+      populateSpaceDropdown(t.subject_id);
+      $('taskSubjSelect').disabled = false;
+
+      showOverlay('taskOverlay');
+    };
+
+    $('taskSaveBtn').onclick = async () => {
+      const title = $('taskTitleInput').value.trim();
+      if (!title) return toast('Task description missing.', 'err');
+
+      const spaceVal = $('taskSubjSelect').value;
+      let subject_id = null;
+
+      if (spaceVal.startsWith('personal:')) subject_id = spaceVal.split(':')[1];
+
+      const due_time = $('taskTimeInput').value || null;
+      const notes = $('taskNotesInput').value.trim() || null;
+
+      if (editTaskId) {
+        const { error } = await db.from('tasks').update({ title, subject_id, due_time, notes }).eq('id', editTaskId);
+        if (error) {
+          console.error('[taskUpdate] Supabase error:', error);
+          return toast(`Error: ${error.message || error.code}`, 'err');
+        }
+        toast('Task update committed.', 'ok');
+      } else {
+        const { error } = await db.from('tasks').insert({
+          user_id: user.id, title, date: targetTaskDate, subject_id, due_time, notes, done: false
+        });
+        if (error) {
+          console.error('[taskInsert] Supabase error:', error);
+          return toast(`Error: ${error.message || error.code}`, 'err');
+        }
+        toast('New milestone created.', 'ok');
+      }
+      hideOverlay('taskOverlay');
+      loadAll();
+    };
+
+    window.toggleTaskStatus = async function(id) {
+      const t = tasks.find(x => x.id === id);
+      if (!t) return;
+      
+      const targetState = !t.done;
+      const { error } = await db.from('tasks').update({ done: targetState }).eq('id', id);
+      if (error) return toast('Status modification network error.', 'err');
+      
+      t.done = targetState;
+      renderAll();
+    };
+
+    window.quickDeleteTask = function(id) {
+      const t = tasks.find(x => x.id === id);
+      if (t) deleteTask(t);
+    };
+
+    function deleteTask(task) {
+      confirmAction(`Delete "${task.title}"?`, async () => {
+        const { error } = await db.from('tasks').delete().eq('id', task.id);
+        if (error) return toast('Error deleting task.', 'err');
+        toast('Task removed.', 'ok');
+        loadAll();
+      });
+    }
+
+
+    /* ============================================================
+       DEADLINE TIMEOUT NOTIFICATION DAEMON SYSTEM
+    ============================================================ */
+    function startNotificationDaemon() {
+      // Hỏi quyền trình duyệt
+      if (window.Notification && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+
+      setInterval(() => {
+        const todayStrNow = todayStr();
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+        tasks.forEach(t => {
+          if (t.done || t.date !== todayStrNow || !t.due_time || notifiedTasks.has(t.id)) return;
+
+          const [h, m] = t.due_time.split(':').map(Number);
+          const taskMinutes = h * 60 + m;
+          const diff = taskMinutes - currentMinutes;
+
+          // Phát cảnh báo nhắc nhở nếu công việc cận hạn trong khoảng từ 0 đến 30 phút
+          if (diff >= 0 && diff <= 30) {
+            notifiedTasks.add(t.id);
+            triggerVisualNotification(t);
+          }
+        });
+      }, 60000); // Đập nhịp quét mỗi phút
+    }
+
+    function triggerVisualNotification(task) {
+      const alertMessage = `Task upcoming due: "${task.title}" at ${task.due_time.substring(0,5)}!`;
+      
+      // 1. Hệ thống Toast góc dưới màn hình
+      toast(`⏰ ${alertMessage}`, 'info');
+
+      // 2. Hệ thống Native Browser Notification (Nếu được cấp quyền)
+      if (window.Notification && Notification.permission === 'granted') {
+        new Notification("Planner Deadline Reminder", { body: alertMessage, icon: '📓' });
+      }
+    }
+
+    /* ============================================================
+       POPOVER QUICK RE-SCHEDULER CONTROLLER
+    ============================================================ */
+    window.triggerMoveTaskPopover = function(taskId, event) {
+      if (event) event.stopPropagation();
+      document.querySelectorAll('.move-pop').forEach(p => p.remove());
+      if (movingTaskId === taskId) { movingTaskId = null; return; }
+      
+      movingTaskId = taskId;
+      const base = new Date(); base.setDate(base.getDate() + weekOffset * 7);
+      const monday = getMonday(base);
+
+      const pop = document.createElement('div');
+      pop.className = 'move-pop';
+      pop.innerHTML = `<div class="move-pop-title">Move to:</div><div class="move-pop-grid">${DAY_SHORTS.map((d,i) => `<button class="move-pop-day" data-i="${i}">${d}</button>`).join('')}</div>`;
+
+      pop.querySelectorAll('.move-pop-day').forEach(btn => {
+        btn.onclick = async e => {
+          e.stopPropagation();
+          const idx = parseInt(btn.dataset.i);
+          const target = new Date(monday); target.setDate(monday.getDate() + idx);
+          
+          pop.remove(); movingTaskId = null;
+
+          const { error } = await db.from('tasks').update({ date: toDateStr(target) }).eq('id', taskId);
+          if (error) return toast('Reschedule request failure.', 'err');
+          
+          toast(`Task shifted to ${DAY_NAMES[idx]}.`, 'ok');
+          loadAll();
+        };
+      });
+      event.currentTarget.parentElement.appendChild(pop);
+    };
+
+    document.addEventListener('click', () => {
+      if (movingTaskId) { document.querySelectorAll('.move-pop').forEach(p => p.remove()); movingTaskId = null; }
+    });
+
+    /* ============================================================
+       PERSONAL PROJECT LIST CONFIGURATOR
+    ============================================================ */
+    $('addListBtn').onclick = () => {
+      $('listNameInput').value = '';
+      selColor = LIST_COLORS[0];
+      renderSwatches();
+      showOverlay('listOverlay');
+    };
+
+    function renderSwatches() {
+      const container = $('colorSwatches'); container.innerHTML = '';
+      LIST_COLORS.forEach(c => {
+        const sw = document.createElement('button');
+        sw.className = `swatch ${selColor === c ? 'active' : ''}`; sw.style.background = c;
+        sw.onclick = () => { selColor = c; renderSwatches(); };
+        container.appendChild(sw);
+      });
+    }
+
+    $('listSaveBtn').onclick = async () => {
+      const name = $('listNameInput').value.trim();
+      if (!name) return toast('List category name missing.', 'err');
+
+      const btn = $('listSaveBtn');
+      btn.disabled = true;
+      btn.textContent = '...';
+
+      const { error } = await db.from('subjects').insert({ user_id: user.id, name, color: selColor });
+
+      btn.disabled = false;
+      btn.textContent = 'Create List';
+
+      if (error) {
+        console.error('[listSave] Supabase error:', error);
+        toast(`Error: ${error.message || error.code || 'Unknown error'}`, 'err');
+        return;
+      }
+
+      toast('Project created!', 'ok');
+      hideOverlay('listOverlay');
+      loadAll();
+    };
+
+    /* ============================================================
+       OVERLAY CONTROL LAYER SYSTEM FUNCTIONS
+    ============================================================ */
+    function showOverlay(id) { $(id).classList.remove('hidden'); }
+    function hideOverlay(id) { $(id).classList.add('hidden'); }
+
+    ['taskOverlay','listOverlay','confirmOverlay'].forEach(id => {
+      $(id).addEventListener('click', e => { if (e.target === $(id)) hideOverlay(id); });
+    });
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') ['taskOverlay','listOverlay','confirmOverlay'].forEach(hideOverlay); });
+
+    $('taskClose').onclick   = () => hideOverlay('taskOverlay');
+    $('taskCancel').onclick  = () => hideOverlay('taskOverlay');
+    $('listClose').onclick   = () => hideOverlay('listOverlay');
+    $('listCancel').onclick  = () => hideOverlay('listOverlay');
+    $('confirmYes').onclick = () => { hideOverlay('confirmOverlay'); if (confirmCb) confirmCb(); confirmCb = null; };
+    $('confirmNo').onclick  = () => hideOverlay('confirmOverlay');
+
+    /* ============================================================
+       AUTHENTICATION FORM PROCESSING CONTROLLER
+    ============================================================ */
+    let authMode = 'login'; 
+    $('tabLoginBtn').onclick = () => { authMode = 'login'; $('tabLoginBtn').classList.add('active'); $('tabSignupBtn').classList.remove('active'); $('authSubmitBtn').querySelector('span').textContent = 'Sign In'; clearAuthNotice(); };
+    $('tabSignupBtn').onclick = () => { authMode = 'signup'; $('tabSignupBtn').classList.add('active'); $('tabLoginBtn').classList.remove('active'); $('authSubmitBtn').querySelector('span').textContent = 'Sign Up'; clearAuthNotice(); };
+
+    function showAuthNotice(msg, type) { const n = $('authNotice'); n.className = `auth-notice show ${type}`; n.textContent = msg; }
+    function clearAuthNotice() { const n = $('authNotice'); n.className = 'auth-notice'; n.textContent = ''; }
+
+    $('authForm').onsubmit = async (e) => {
+      e.preventDefault(); clearAuthNotice();
+      const email = $('authEmail').value.trim();
+      const password = $('authPassword').value;
+      const btn = $('authSubmitBtn');
+
+      btn.disabled = true; const originalText = btn.querySelector('span').textContent; btn.innerHTML = '<div class="spin"></div>';
+
+      if (authMode === 'login') {
+        const { error } = await db.auth.signInWithPassword({ email, password });
+        if (error) { showAuthNotice(error.message, 'error'); btn.disabled = false; btn.innerHTML = `<span>${originalText}</span>`; }
+      } else {
+        const { error } = await db.auth.signUp({ email, password });
+        if (error) showAuthNotice(error.message, 'error');
+        else showAuthNotice('Registration successful! Check your inbox.', 'success');
+        btn.disabled = false; btn.innerHTML = `<span>${originalText}</span>`;
+      }
+    };
+
+    $('logoutBtn').onclick = () => { confirmAction("Are you sure you want to sign out?", async () => { await db.auth.signOut(); }); };
+
+    function toast(msg, type = 'ok') {
+      const el = document.createElement('div'); el.className = `toast ${type}`; el.textContent = msg;
+      $('toastWrap').appendChild(el);
+      setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 220); }, 3000);
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    /* ============================================================
+       WEEK NAVIGATION
+    ============================================================ */
+    $('weekPrev').onclick = () => { weekOffset--; renderAll(); };
+    $('weekNext').onclick = () => { weekOffset++; renderAll(); };
+    $('weekTodayBtn').onclick = () => { weekOffset = 0; renderAll(); };
+
+    /* ============================================================
+       SEARCH — re-render grid on every keystroke
+    ============================================================ */
+    $('searchInput').addEventListener('input', () => renderGrid());
+
+    /* ============================================================
+       FILTER CHIPS (All / Pending / Done)
+    ============================================================ */
+    document.querySelectorAll('.filter-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterMode = btn.dataset.f;
+        document.querySelectorAll('.filter-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderGrid();
+      });
+    });
+
+    /* ============================================================
+       ONBOARDING BUTTON
+    ============================================================ */
+    $('onboardingActionBtn').onclick = () => $('addListBtn').click();
+
+    /* ============================================================
+       STATS PANEL — số liệu tổng quan tuần này
+    ============================================================ */
+    $('statsBtn').onclick = () => {
+      const base = new Date(); base.setDate(base.getDate() + weekOffset * 7);
+      const mon  = getMonday(base);
+      const sun  = new Date(mon); sun.setDate(mon.getDate() + 6);
+      const monStr = toDateStr(mon), sunStr = toDateStr(sun);
+      const wt   = tasks.filter(t => t.date >= monStr && t.date <= sunStr);
+      const done = wt.filter(t => t.done).length;
+      const pct  = wt.length ? Math.round(done / wt.length * 100) : 0;
+
+      // build per-day breakdown
+      const DAY_FULL = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      let rows = '';
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(mon); d.setDate(mon.getDate() + i);
+        const ds = toDateStr(d);
+        const dt = wt.filter(t => t.date === ds);
+        const dc = dt.filter(t => t.done).length;
+        rows += `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);">${DAY_FULL[i]} ${d.getDate()}</span>
+          <span>${dc}/${dt.length} done</span>
+        </div>`;
+      }
+
+      // reuse confirmOverlay as a quick info modal
+      $('confirmMessage').innerHTML = `
+        <div style="text-align:left">
+          <div style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:14px;">📊 Week Stats</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--accent);margin-bottom:4px;">${pct}%</div>
+          <div style="font-size:12px;color:var(--ink-soft);margin-bottom:16px;">${done} of ${wt.length} personal tasks complete</div>
+          ${rows}
+        </div>`;
+      // hide the Yes button, repurpose No as Close
+      $('confirmYes').classList.add('hidden');
+      $('confirmNo').textContent  = 'Close';
+      $('confirmNo').onclick = () => {
+        hideOverlay('confirmOverlay');
+        $('confirmYes').classList.remove('hidden');
+        $('confirmNo').textContent = 'No';
+        $('confirmNo').onclick = () => hideOverlay('confirmOverlay');
+      };
+      showOverlay('confirmOverlay');
+    };
+
+    /* ============================================================
+       ARCHIVE — show & restore completed tasks
+    ============================================================ */
+    $('archiveBtn').onclick = () => {
+      const doneTasks = tasks.filter(t => t.done);
+
+      if (!doneTasks.length) {
+        toast('No completed tasks to archive.', 'info');
+        return;
+      }
+
+      let rows = '';
+      doneTasks.slice(0, 20).forEach(t => {
+        rows += `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);gap:10px;">
+          <span style="font-size:13px;text-decoration:line-through;color:var(--ink-soft);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(t.title)}</span>
+          <button onclick="restoreTask('${t.id}')" style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.04em;padding:3px 8px;border-radius:4px;background:var(--good-soft);color:var(--good);border:1px solid var(--good);cursor:pointer;flex-shrink:0;">Restore</button>
+        </div>`;
+      });
+      if (doneTasks.length > 20) rows += `<div style="font-size:12px;color:var(--ink-faint);padding-top:8px;">… and ${doneTasks.length-20} more</div>`;
+
+      $('confirmMessage').innerHTML = `
+        <div style="text-align:left">
+          <div style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:14px;">🗂 Completed Tasks</div>
+          ${rows}
+        </div>`;
+      $('confirmYes').classList.add('hidden');
+      $('confirmNo').textContent = 'Close';
+      $('confirmNo').onclick = () => {
+        hideOverlay('confirmOverlay');
+        $('confirmYes').classList.remove('hidden');
+        $('confirmNo').textContent = 'No';
+        $('confirmNo').onclick = () => hideOverlay('confirmOverlay');
+      };
+      showOverlay('confirmOverlay');
+    };
+
+    window.restoreTask = async function(id) {
+      const { error } = await db.from('tasks').update({ done: false }).eq('id', id);
+      if (error) return toast('Restore failed.', 'err');
+      toast('Task restored.', 'ok');
+      hideOverlay('confirmOverlay');
+      $('confirmYes').classList.remove('hidden');
+      $('confirmNo').textContent = 'No';
+      $('confirmNo').onclick = () => hideOverlay('confirmOverlay');
+      loadAll();
+    };
+
+  </script>
+</body>
+</html>
