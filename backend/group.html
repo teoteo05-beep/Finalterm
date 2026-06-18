@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planner — Group Space</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    :root,[data-theme="dark"]{--bg:#24211a;--paper:#2b261d;--ink:#e1dbcd;--ink-soft:#999081;--ink-faint:#6e6659;--line:#3a3428;--line-strong:#4f4737;--accent:#bd5338;--accent-soft:#3d241e;--good:#5b8254;--good-soft:#1f2b1d;--warn:#c4933a;--warn-soft:#2e2410;--blue:#2d6fa8;--blue-soft:#142236;--shadow:0 4px 20px rgba(0,0,0,.25);--r:10px;--t:all .2s ease}
+    [data-theme="light"]{--bg:#f4f1ea;--paper:#fbfaf6;--ink:#1c1a17;--ink-soft:#56514a;--ink-faint:#928b80;--line:#e2ddd2;--line-strong:#d2ccbe;--accent:#b5482e;--accent-soft:#e9d9d2;--good:#4f7a4a;--good-soft:#dde7da;--warn:#a87820;--warn-soft:#f5edda;--blue:#2059a0;--blue-soft:#dae4f5;--shadow:0 1px 2px rgba(28,26,23,.04),0 8px 24px -12px rgba(28,26,23,.14)}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{font-family:'Newsreader',Georgia,serif;font-size:16px;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;background-image:radial-gradient(rgba(225,219,205,.015) 1px,transparent 1px);background-size:8px 8px;min-height:100vh}
+    button{cursor:pointer;font-family:inherit;border:none;background:none;color:inherit}
+    input,select,textarea{font-family:inherit;color:inherit;border:none;outline:none;background:none}
+    .hidden{display:none!important}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:99px}
+
+    /* LOADING */
+    #loadingScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+    .spin{width:22px;height:22px;border:2px solid var(--line-strong);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-text{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-faint)}
+
+    /* HEADER */
+    .app-header{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:20}
+    .header-left{display:flex;align-items:center;gap:14px}
+    .btn-back{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:7px 14px;border-radius:7px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink-soft);transition:var(--t)}
+    .btn-back:hover{color:var(--ink);border-color:var(--ink-soft)}
+    .app-brand{font-family:'Fraunces',serif;font-weight:700;font-size:22px;letter-spacing:-.02em;color:var(--ink-faint)}
+    .app-brand span{color:var(--accent)}
+    .header-right{display:flex;align-items:center;gap:10px}
+    .btn-theme{font-size:15px;padding:5px;border-radius:6px;color:var(--ink-faint);transition:var(--t)}
+    .btn-theme:hover{color:var(--ink)}
+    .user-chip{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-soft)}
+    .user-avatar{width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent);border:1px solid var(--line-strong);display:grid;place-items:center;font-size:11px;font-weight:700}
+
+    /* DEADLINE BANNER */
+    .deadline-banner{background:var(--warn-soft);border:1px solid var(--warn);border-radius:var(--r);padding:12px 18px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px}
+    .deadline-banner-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+    .deadline-banner-body{flex:1}
+    .deadline-banner-title{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--warn);margin-bottom:6px}
+    .deadline-item{font-size:13.5px;color:var(--ink);padding:3px 0;display:flex;align-items:center;gap:8px}
+    .deadline-tag{font-family:'JetBrains Mono',monospace;font-size:9px;padding:1px 6px;border-radius:4px;background:var(--warn-soft);border:1px solid var(--warn);color:var(--warn);white-space:nowrap}
+
+    /* LAYOUT */
+    .page-body{max-width:1100px;margin:0 auto;padding:24px 24px 60px}
+    .two-col{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start}
+    @media(max-width:900px){.two-col{grid-template-columns:1fr}}
+
+    /* HERO */
+    .group-hero{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:22px 26px;margin-bottom:18px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+    .group-hero-info{flex:1}
+    .group-label{font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-faint);margin-bottom:4px}
+    .group-name{font-family:'Fraunces',serif;font-weight:600;font-size:26px;letter-spacing:-.01em;color:var(--ink);margin-bottom:10px}
+    .group-meta-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .group-meta-item{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);display:flex;align-items:center;gap:4px}
+    .group-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+    .role-badge{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 7px;border-radius:4px;background:var(--line-strong);color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em}
+    .role-badge.admin{background:var(--accent-soft);color:var(--accent)}
+    .group-id-box{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 12px;margin-top:12px}
+    .group-id-label{font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);white-space:nowrap}
+    .group-id-val{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);user-select:all;word-break:break-all;flex:1}
+    .btn-copy{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.04em;padding:4px 10px;border-radius:5px;background:var(--line);color:var(--ink-soft);transition:var(--t);white-space:nowrap;flex-shrink:0}
+    .btn-copy:hover{background:var(--line-strong);color:var(--ink)}
+    .btn-add-task{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:9px 18px;border-radius:8px;background:var(--ink);color:var(--paper);transition:var(--t);white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;gap:6px}
+    .btn-add-task:hover{background:var(--accent)}
+
+    /* SECTION */
+    .section{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:18px 22px;margin-bottom:18px;box-shadow:var(--shadow)}
+    .section-title{font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-faint);margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+
+    /* STATS */
+    .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+    .stat-card{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;text-align:center}
+    .stat-num{font-family:'Fraunces',serif;font-size:26px;font-weight:700;line-height:1}
+    .stat-num.accent{color:var(--accent)}
+    .stat-num.good{color:var(--good)}
+    .stat-num.warn{color:var(--warn)}
+    .stat-label{font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);margin-top:4px}
+    .progress-track{height:6px;background:var(--line-strong);border-radius:99px;overflow:hidden;margin-bottom:14px}
+    .progress-fill{height:100%;background:var(--good);border-radius:99px;transition:width .4s ease}
+
+    /* LEADERBOARD */
+    .lb-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;background:var(--bg);margin-bottom:6px}
+    .lb-rank{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;width:22px;text-align:center;flex-shrink:0}
+    .lb-rank.gold{color:#d4a830}.lb-rank.silver{color:#999}.lb-rank.bronze{color:#b07040}
+    .lb-avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;flex-shrink:0;background:var(--accent-soft);color:var(--accent)}
+    .lb-name{flex:1;font-size:13.5px}
+    .lb-bar-wrap{width:80px;height:5px;background:var(--line-strong);border-radius:99px;overflow:hidden}
+    .lb-bar{height:100%;background:var(--good);border-radius:99px}
+    .lb-count{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);width:36px;text-align:right;flex-shrink:0}
+
+    /* MEMBERS */
+    .member-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;background:var(--bg);margin-bottom:6px}
+    .member-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);border:1px solid var(--line-strong);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
+    .member-info{flex:1;min-width:0}
+    .member-name{font-size:13.5px;font-weight:500}
+    .member-sub{font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-top:1px}
+    .member-tasks{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-soft);background:var(--line);padding:2px 7px;border-radius:4px;white-space:nowrap}
+    .online-dot{width:7px;height:7px;border-radius:50%;background:var(--good);flex-shrink:0}
+
+    /* TASK LIST */
+    .filter-bar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+    .filter-chip{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.04em;padding:5px 12px;border-radius:6px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink-soft);transition:var(--t)}
+    .filter-chip:hover{color:var(--ink);border-color:var(--ink-soft)}
+    .filter-chip.active{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+    .tasks-list{display:flex;flex-direction:column;gap:8px}
+    .task-card{padding:12px 14px;background:var(--bg);border-left:3px solid var(--accent);border-radius:0 7px 7px 0;display:flex;align-items:center;gap:12px;transition:var(--t)}
+    .task-card:hover{background:var(--line)}
+    .task-card.done{border-left-color:var(--good);opacity:.6}
+    .task-card.done .task-card-title{text-decoration:line-through}
+    .task-card.overdue{border-left-color:var(--warn)}
+    .task-check{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--line-strong);flex-shrink:0;display:grid;place-items:center;transition:var(--t);cursor:pointer;font-size:10px}
+    .task-check:hover{border-color:var(--good)}
+    .task-card.done .task-check{background:var(--good);border-color:var(--good);color:#fff}
+    .task-card-body{flex:1;min-width:0}
+    .task-card-title{font-size:14px;font-weight:500;margin-bottom:4px;word-break:break-word}
+    .task-card-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .badge{font-family:'JetBrains Mono',monospace;font-size:9px;padding:1px 6px;border-radius:4px;display:inline-flex;align-items:center;gap:3px}
+    .badge-date{background:var(--line);color:var(--ink-soft)}
+    .badge-time{background:var(--accent-soft);color:var(--accent)}
+    .badge-time.soon{background:var(--warn-soft);color:var(--warn)}
+    .badge-assignee{background:var(--blue-soft);color:var(--blue)}
+    .badge-note{background:var(--line);color:var(--ink-soft)}
+    .badge-overdue{background:var(--warn-soft);color:var(--warn)}
+    .task-actions{display:flex;gap:4px;flex-shrink:0}
+    .chip-act{font-size:11px;padding:4px 8px;border-radius:5px;background:var(--line);color:var(--ink-soft);transition:var(--t)}
+    .chip-act:hover{background:var(--line-strong);color:var(--ink)}
+    .chip-act.del:hover{background:var(--accent-soft);color:var(--accent)}
+    .no-task{text-align:center;color:var(--ink-faint);padding:32px 0;font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+
+    /* CHAT */
+    .chat-wrap{display:flex;flex-direction:column;height:360px}
+    .chat-messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 0 8px}
+    .chat-msg{display:flex;gap:8px;align-items:flex-start}
+    .chat-msg.mine{flex-direction:row-reverse}
+    .chat-avatar{width:26px;height:26px;border-radius:50%;background:var(--line-strong);color:var(--ink-soft);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+    .chat-msg.mine .chat-avatar{background:var(--accent-soft);color:var(--accent)}
+    .chat-bubble{max-width:78%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+    .chat-msg.mine .chat-bubble{background:var(--accent-soft);border-color:var(--accent)}
+    .chat-bubble-text{font-size:13.5px;line-height:1.45;word-break:break-word}
+    .chat-bubble-meta{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--ink-faint);margin-top:3px}
+    .chat-msg.mine .chat-bubble-meta{text-align:right}
+    .chat-input-row{display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--line);margin-top:8px}
+    .chat-input{flex:1;background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:8px 12px;font-size:13.5px;transition:var(--t);color:var(--ink)}
+    .chat-input:focus{border-color:var(--accent);background:var(--paper);outline:none}
+    .chat-send-btn{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:8px 14px;border-radius:8px;background:var(--ink);color:var(--paper);transition:var(--t);flex-shrink:0}
+    .chat-send-btn:hover{background:var(--accent)}
+    .chat-empty{text-align:center;color:var(--ink-faint);font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;padding:40px 0}
+
+    /* MODAL */
+    .overlay{position:fixed;inset:0;background:rgba(20,18,14,.5);backdrop-filter:blur(2px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+    .modal{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);width:100%;max-width:440px;display:flex;flex-direction:column;animation:mIn .18s ease-out;overflow:hidden;max-height:90vh}
+    @keyframes mIn{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+    .modal-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+    .modal-head h2{font-family:'Fraunces',serif;font-size:18px;font-weight:600}
+    .modal-close{font-size:16px;color:var(--ink-faint);width:28px;height:28px;border-radius:50%;display:grid;place-items:center;transition:var(--t)}
+    .modal-close:hover{background:var(--bg);color:var(--ink)}
+    .modal-body{padding:18px 20px;display:flex;flex-direction:column;gap:13px;overflow-y:auto}
+    .modal-foot{padding:14px 20px;background:var(--bg);border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
+    .form-group{display:flex;flex-direction:column;gap:5px}
+    .form-label{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint)}
+    .form-input{background:var(--bg);border:1px solid var(--line-strong);border-radius:7px;padding:8px 12px;font-size:14px;width:100%;transition:var(--t);color:var(--ink);color-scheme:dark}
+    .form-input:focus{border-color:var(--accent);background:var(--paper);outline:none}
+    .modal-sm{max-width:320px}
+    .modal-sm .modal-body{text-align:center;font-size:14px;color:var(--ink-soft);padding:22px;line-height:1.6}
+    .btn{padding:9px 18px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;transition:var(--t);display:inline-flex;align-items:center;gap:6px}
+    .btn:disabled{opacity:.5;pointer-events:none}
+    .btn-primary{background:var(--ink);color:var(--paper)}
+    .btn-primary:hover{background:var(--accent);color:#fff}
+    .btn-ghost{color:var(--ink-soft)}
+    .btn-ghost:hover{color:var(--ink);background:var(--line)}
+    .btn-danger{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent)}
+    .btn-danger:hover{background:var(--accent);color:#fff}
+
+    /* TOAST */
+    .toast-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+    .toast{padding:8px 18px;border-radius:30px;font-size:13px;font-weight:500;box-shadow:var(--shadow);animation:tIn .2s ease;white-space:nowrap;pointer-events:auto}
+    .toast.out{animation:tOut .2s ease forwards}
+    .toast.ok{background:var(--good-soft);border:1px solid var(--good);color:var(--good)}
+    .toast.err{background:var(--accent-soft);border:1px solid var(--accent);color:var(--accent)}
+    .toast.info{background:var(--paper);border:1px solid var(--line-strong);color:var(--ink-soft)}
+    .toast.warn{background:var(--warn-soft);border:1px solid var(--warn);color:var(--warn)}
+    @keyframes tIn{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+    @keyframes tOut{to{transform:translateY(-4px);opacity:0}}
+  </style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div class="spin"></div>
+  <div class="loading-text">Loading group space…</div>
+</div>
+
+<div id="appScreen" class="hidden">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-left">
+      <button class="btn-back" onclick="window.location.href='index.html'">← Personal</button>
+      <div class="app-brand">Plan<span>ner</span></div>
+    </div>
+    <div class="header-right">
+      <button class="btn-theme" id="themeBtn">☀️</button>
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <span id="userEmail" style="font-size:12px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">…</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+
+    <!-- DEADLINE BANNER -->
+    <div class="deadline-banner hidden" id="deadlineBanner">
+      <div class="deadline-banner-icon">⚠️</div>
+      <div class="deadline-banner-body">
+        <div class="deadline-banner-title">Upcoming Deadlines (next 24h)</div>
+        <div id="deadlineList"></div>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="group-hero">
+      <div class="group-hero-info">
+        <div class="group-label">👥 Team Group</div>
+        <div class="group-name" id="groupName">Loading…</div>
+        <div class="group-meta-row">
+          <span class="group-meta-item">
+            <span class="group-dot" id="groupDot" style="background:#caa030"></span>
+            <span id="groupMemberCount">— members</span>
+          </span>
+          <span class="role-badge" id="userRoleBadge">member</span>
+        </div>
+        <div class="group-id-box">
+          <span class="group-id-label">Invite ID:</span>
+          <span class="group-id-val" id="groupIdVal">—</span>
+          <button class="btn-copy" onclick="copyGroupId()">Copy</button>
+        </div>
+      </div>
+      <button class="btn-add-task hidden" id="addTaskBtn" onclick="openNewTaskModal()">＋ Add Task</button>
+    </div>
+
+    <div class="two-col">
+
+      <!-- LEFT COLUMN -->
+      <div>
+
+        <!-- STATS -->
+        <div class="section">
+          <div class="section-title"><span>📊 Group Progress</span><span id="statsWeekLabel" style="font-size:9px;color:var(--ink-faint)"></span></div>
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Total Tasks</div></div>
+            <div class="stat-card"><div class="stat-num good" id="statDone">0</div><div class="stat-label">Done</div></div>
+            <div class="stat-card"><div class="stat-num accent" id="statPending">0</div><div class="stat-label">Pending</div></div>
+          </div>
+          <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+          <!-- LEADERBOARD -->
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-faint);margin-bottom:10px">🏆 Leaderboard — tasks completed</div>
+          <div id="leaderboard"></div>
+        </div>
+
+        <!-- TASKS -->
+        <div class="section">
+          <div class="section-title">
+            <span>📋 Tasks</span>
+            <button class="btn-add-task hidden" id="addTaskBtn2" onclick="openNewTaskModal()" style="padding:5px 12px;font-size:10px">＋ Add</button>
+          </div>
+          <div class="filter-bar">
+            <button class="filter-chip active" data-f="all" onclick="setFilter('all',this)">All <span id="cntAll">0</span></button>
+            <button class="filter-chip" data-f="pending" onclick="setFilter('pending',this)">Pending <span id="cntPending">0</span></button>
+            <button class="filter-chip" data-f="done" onclick="setFilter('done',this)">Done <span id="cntDone">0</span></button>
+            <button class="filter-chip" data-f="mine" onclick="setFilter('mine',this)">Mine <span id="cntMine">0</span></button>
+          </div>
+          <div class="tasks-list" id="tasksList"><div class="no-task">Loading tasks…</div></div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div>
+
+        <!-- MEMBERS -->
+        <div class="section">
+          <div class="section-title"><span>👤 Members</span><span id="memberCountLabel" style="font-size:9px;color:var(--ink-faint)"></span></div>
+          <div id="membersList"><div class="no-task" style="padding:16px 0">Loading…</div></div>
+        </div>
+
+        <!-- CHAT -->
+        <div class="section">
+          <div class="section-title"><span>💬 Group Chat</span></div>
+          <div class="chat-wrap">
+            <div class="chat-messages" id="chatMessages"><div class="chat-empty">No messages yet. Say hi! 👋</div></div>
+            <div class="chat-input-row">
+              <input type="text" class="chat-input" id="chatInput" placeholder="Type a message…" maxlength="400" />
+              <button class="chat-send-btn" id="chatSendBtn">Send</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TASK MODAL -->
+<div class="overlay hidden" id="taskOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="taskModalTitle">New Task</h2>
+      <button class="modal-close" onclick="closeModal('taskOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Task description</label>
+        <input type="text" class="form-input" id="taskTitleInput" placeholder="What needs to be done?" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-input" id="taskDateInput" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Due Time</label>
+        <input type="time" class="form-input" id="taskTimeInput" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assign To Member</label>
+        <select class="form-input" id="taskAssigneeSelect"><option value="">— Unassigned —</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-input" id="taskNotesInput" rows="3" placeholder="Extra context…"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('taskOverlay')">Cancel</button>
+      <button class="btn btn-danger hidden" id="taskDeleteBtn" onclick="deleteCurrentTask()">Delete</button>
+      <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="overlay hidden" id="confirmOverlay">
+  <div class="modal modal-sm">
+    <div class="modal-body" id="confirmMsg">Are you sure?</div>
+    <div class="modal-foot" style="background:transparent;padding-top:0">
+      <button class="btn btn-ghost" onclick="closeModal('confirmOverlay')">No</button>
+      <button class="btn btn-primary" id="confirmYes">Yes</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+  /* ══ CONFIG ══ */
+  const SUPABASE_URL = "https://zvpuegaworuzwltpknan.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_pGGZfXK1yFA61NRpDx_KaQ_kIr5Dglr";
+  const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  /* ══ STATE ══ */
+  const urlParams      = new URLSearchParams(window.location.search);
+  const currentGroupId = urlParams.get('id');
+  if (!currentGroupId) window.location.href = 'index.html';
+
+  let user       = null;
+  let groupData  = null;
+  let members    = [];   // [{user_id, role}]
+  let tasks      = [];
+  let messages   = [];
+  let filterMode = 'all';
+  let editTaskId = null;
+  let confirmCb  = null;
+  let realtimeCh = null;
+  let notifiedDeadlines = new Set();
+
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2,'0');
+  const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+  const nowMinutes = () => { const n = new Date(); return n.getHours()*60+n.getMinutes(); };
+
+  /* ══ THEME ══ */
+  function initTheme() {
+    const saved = localStorage.getItem('tido-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    $('themeBtn').textContent = saved === 'dark' ? '☀️' : '🌙';
+  }
+  $('themeBtn').onclick = () => {
+    const curr = document.documentElement.getAttribute('data-theme');
+    const next = curr === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('tido-theme', next);
+    $('themeBtn').textContent = next === 'dark' ? '☀️' : '🌙';
+  };
+
+  /* ══ BOOT ══ */
+  window.addEventListener('DOMContentLoaded', async () => {
+    initTheme();
+    db.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        user = session.user;
+        $('userEmail').textContent = user.email.split('@')[0].substring(0,10);
+        $('userAvatar').textContent = user.email.charAt(0).toUpperCase();
+        await loadPage();
+        $('loadingScreen').classList.add('hidden');
+        $('appScreen').classList.remove('hidden');
+        subscribeRealtime();
+        startDeadlineDaemon();
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
+  });
+
+  /* ══ REALTIME ══ */
+  function subscribeRealtime() {
+    if (realtimeCh) db.removeChannel(realtimeCh);
+    realtimeCh = db.channel('group-rt-' + currentGroupId)
+      .on('postgres_changes', { event:'*', schema:'public', table:'tasks',
+          filter:`group_id=eq.${currentGroupId}` }, async () => { await loadTasks(); renderTasks(); renderStats(); renderDeadlineBanner(); })
+      .on('postgres_changes', { event:'INSERT', schema:'public', table:'group_messages',
+          filter:`group_id=eq.${currentGroupId}` }, async () => { await loadMessages(); renderChat(); })
+      .subscribe();
+  }
+
+  /* ══ LOAD ALL ══ */
+  async function loadPage() {
+    await Promise.all([loadGroup(), loadMembers(), loadTasks(), loadMessages()]);
+    renderHero();
+    renderStats();
+    renderMembers();
+    renderTasks();
+    renderChat();
+    renderDeadlineBanner();
+  }
+
+  async function loadGroup() {
+    const { data: mem } = await db.from('group_members').select('role').eq('group_id', currentGroupId).eq('user_id', user.id).single();
+    if (!mem) { toast('Not a member of this group.', 'err'); setTimeout(() => window.location.href = 'index.html', 2000); return; }
+    const { data } = await db.from('groups').select('*').eq('id', currentGroupId).single();
+    if (data) groupData = { ...data, userRole: mem.role };
+  }
+
+  async function loadMembers() {
+    const { data } = await db.from('group_members').select('user_id, role').eq('group_id', currentGroupId);
+    if (data) members = data;
+  }
+
+  async function loadTasks() {
+    const { data } = await db.from('tasks').select('*').eq('group_id', currentGroupId).order('date', { ascending: true });
+    if (data) tasks = data;
+  }
+
+  async function loadMessages() {
+    const { data } = await db.from('group_messages').select('*').eq('group_id', currentGroupId).order('created_at', { ascending: true }).limit(80);
+    if (data) messages = data;
+  }
+
+  /* ══ HERO ══ */
+  function renderHero() {
+    if (!groupData) return;
+    document.title = groupData.name + ' — Planner';
+    $('groupName').textContent = groupData.name;
+    $('groupDot').style.background = groupData.color || '#caa030';
+    $('groupMemberCount').textContent = `${members.length} member${members.length !== 1 ? 's' : ''}`;
+    $('groupIdVal').textContent = groupData.id;
+    const isAdmin = groupData.userRole === 'admin';
+    const badge = $('userRoleBadge');
+    badge.textContent = isAdmin ? '👑 Admin' : 'Member';
+    if (isAdmin) badge.classList.add('admin');
+    if (isAdmin) { $('addTaskBtn').classList.remove('hidden'); $('addTaskBtn2').classList.remove('hidden'); }
+  }
+
+  /* ══ STATS + LEADERBOARD ══ */
+  function renderStats() {
+    const total   = tasks.length;
+    const done    = tasks.filter(t => t.done).length;
+    const pending = total - done;
+    const pct     = total ? Math.round(done / total * 100) : 0;
+
+    $('statTotal').textContent   = total;
+    $('statDone').textContent    = done;
+    $('statPending').textContent = pending;
+    $('progressFill').style.width = pct + '%';
+    $('statsWeekLabel').textContent = pct + '% complete';
+
+    // Leaderboard — rank by done tasks per assignee
+    const scoreMap = {};
+    members.forEach(m => { scoreMap[m.user_id] = { done: 0, total: 0 }; });
+    tasks.forEach(t => {
+      if (t.assigned_to && scoreMap[t.assigned_to]) {
+        scoreMap[t.assigned_to].total++;
+        if (t.done) scoreMap[t.assigned_to].done++;
+      }
+    });
+
+    const ranked = Object.entries(scoreMap)
+      .map(([uid, s]) => ({ uid, ...s }))
+      .sort((a, b) => b.done - a.done || b.total - a.total);
+
+    const maxDone = ranked[0]?.done || 1;
+    const rankClasses = ['gold', 'silver', 'bronze'];
+    const medals = ['🥇', '🥈', '🥉'];
+
+    const lb = $('leaderboard');
+    lb.innerHTML = '';
+    if (!ranked.length) { lb.innerHTML = '<div class="no-task" style="padding:12px 0">No tasks assigned yet.</div>'; return; }
+
+    ranked.forEach((r, i) => {
+      const isMe = r.uid === user.id;
+      const initial = r.uid.charAt(0).toUpperCase();
+      const name = isMe ? 'You' : `User ${r.uid.substring(0,6)}…`;
+      const pctBar = maxDone ? Math.round(r.done / maxDone * 100) : 0;
+      const row = document.createElement('div');
+      row.className = 'lb-row';
+      row.innerHTML = `
+        <div class="lb-rank ${rankClasses[i] || ''}">${medals[i] || (i+1)}</div>
+        <div class="lb-avatar" style="${isMe ? 'background:var(--accent-soft);color:var(--accent)' : ''}">${initial}</div>
+        <div class="lb-name">${name}${isMe ? ' <span style="font-size:10px;color:var(--ink-faint)">(me)</span>' : ''}</div>
+        <div class="lb-bar-wrap"><div class="lb-bar" style="width:${pctBar}%"></div></div>
+        <div class="lb-count">${r.done}/${r.total}</div>
+      `;
+      lb.appendChild(row);
+    });
+  }
+
+  /* ══ MEMBERS ══ */
+  function renderMembers() {
+    $('memberCountLabel').textContent = members.length + ' total';
+    const container = $('membersList');
+    container.innerHTML = '';
+    if (!members.length) { container.innerHTML = '<div class="no-task" style="padding:14px 0">No members.</div>'; return; }
+
+    members.forEach(m => {
+      const isMe = m.user_id === user.id;
+      const initial = m.user_id.charAt(0).toUpperCase();
+      const myTasks  = tasks.filter(t => t.assigned_to === m.user_id);
+      const myDone   = myTasks.filter(t => t.done).length;
+      const row = document.createElement('div');
+      row.className = 'member-row';
+      row.innerHTML = `
+        <div class="member-avatar" style="${m.role==='admin'?'background:var(--accent-soft);color:var(--accent)':''}">
+          ${m.role === 'admin' ? '👑' : initial}
+        </div>
+        <div class="member-info">
+          <div class="member-name">${isMe ? '<strong>You</strong>' : `User ${m.user_id.substring(0,10)}…`} ${isMe ? '<span style="font-size:10px;color:var(--good);">(me)</span>' : ''}</div>
+          <div class="member-sub">${m.role}${myTasks.length ? ` · ${myDone}/${myTasks.length} tasks done` : ''}</div>
+        </div>
+        ${myTasks.length ? `<div class="member-tasks">${myDone}/${myTasks.length}</div>` : ''}
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  /* ══ DEADLINE BANNER ══ */
+  function renderDeadlineBanner() {
+    const today = todayStr();
+    const tomorrow = (() => { const d = new Date(); d.setDate(d.getDate()+1); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; })();
+    const now = nowMinutes();
+
+    const upcoming = tasks.filter(t => {
+      if (t.done) return false;
+      if (t.date === today) {
+        if (!t.due_time) return false;
+        const [h, m] = t.due_time.split(':').map(Number);
+        return (h * 60 + m) > now; // only future times today
+      }
+      return t.date === tomorrow;
+    });
+
+    const banner = $('deadlineBanner');
+    const list   = $('deadlineList');
+
+    if (!upcoming.length) { banner.classList.add('hidden'); return; }
+    banner.classList.remove('hidden');
+    list.innerHTML = '';
+
+    upcoming.slice(0, 5).forEach(t => {
+      const when = t.date === today ? `Today ${t.due_time ? t.due_time.substring(0,5) : ''}` : 'Tomorrow';
+      const div = document.createElement('div');
+      div.className = 'deadline-item';
+      div.innerHTML = `<span>${escapeHtml(t.title)}</span><span class="deadline-tag">${when}</span>`;
+      list.appendChild(div);
+    });
+    if (upcoming.length > 5) list.innerHTML += `<div style="font-size:12px;color:var(--warn);margin-top:4px">…and ${upcoming.length-5} more</div>`;
+  }
+
+  /* ══ DEADLINE DAEMON (browser notifications) ══ */
+  function startDeadlineDaemon() {
+    if (window.Notification && Notification.permission === 'default') Notification.requestPermission();
+
+    setInterval(() => {
+      const today = todayStr();
+      const now   = nowMinutes();
+      tasks.forEach(t => {
+        if (t.done || t.date !== today || !t.due_time || notifiedDeadlines.has(t.id)) return;
+        const [h, m] = t.due_time.split(':').map(Number);
+        const diff = (h * 60 + m) - now;
+        if (diff >= 0 && diff <= 30) {
+          notifiedDeadlines.add(t.id);
+          toast(`⏰ "${t.title}" due in ${diff || '<1'} min`, 'warn');
+          if (window.Notification && Notification.permission === 'granted')
+            new Notification('Group Task Deadline', { body: `"${t.title}" is due soon (${t.due_time.substring(0,5)})`, icon: '📓' });
+        }
+      });
+    }, 60000);
+  }
+
+  /* ══ FILTER ══ */
+  window.setFilter = function(mode, btn) {
+    filterMode = mode;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    renderTasks();
+  };
+
+  /* ══ RENDER TASKS ══ */
+  function renderTasks() {
+    const today = todayStr();
+    const now   = nowMinutes();
+
+    const mine    = tasks.filter(t => t.assigned_to === user.id);
+    const pending = tasks.filter(t => !t.done);
+    const done    = tasks.filter(t =>  t.done);
+
+    $('cntAll').textContent     = tasks.length;
+    $('cntPending').textContent = pending.length;
+    $('cntDone').textContent    = done.length;
+    $('cntMine').textContent    = mine.length;
+
+    let filtered = tasks;
+    if (filterMode === 'pending') filtered = pending;
+    else if (filterMode === 'done') filtered = done;
+    else if (filterMode === 'mine') filtered = mine;
+
+    const container = $('tasksList');
+    if (!filtered.length) {
+      container.innerHTML = `<div class="no-task">${filterMode === 'all' ? 'No tasks yet.' : `No ${filterMode} tasks.`}</div>`;
+      return;
+    }
+
+    container.innerHTML = '';
+    const isAdmin = groupData && groupData.userRole === 'admin';
+
+    filtered.forEach(t => {
+      // Overdue check
+      let isOverdue = false;
+      if (!t.done && t.date && t.due_time) {
+        const [h, m] = t.due_time.split(':').map(Number);
+        isOverdue = t.date < today || (t.date === today && (h*60+m) < now);
+      } else if (!t.done && t.date && t.date < today) {
+        isOverdue = true;
+      }
+
+      // Soon check (within 30 min today)
+      let isSoon = false;
+      if (!t.done && t.date === today && t.due_time) {
+        const [h, m] = t.due_time.split(':').map(Number);
+        const diff = (h*60+m) - now;
+        isSoon = diff >= 0 && diff <= 30;
+      }
+
+      const assignedLabel = t.assigned_to
+        ? (t.assigned_to === user.id ? 'You' : `User ${t.assigned_to.substring(0,6)}…`)
+        : '';
+
+      const card = document.createElement('div');
+      card.className = `task-card ${t.done ? 'done' : ''} ${isOverdue && !t.done ? 'overdue' : ''}`;
+
+      // Build inner HTML without inline onclick — attach listeners after
+      card.innerHTML = `
+        <div class="task-check">${t.done ? '✓' : ''}</div>
+        <div class="task-card-body">
+          <div class="task-card-title">${escapeHtml(t.title)}</div>
+          <div class="task-card-meta">
+            ${t.date     ? `<span class="badge badge-date">📅 ${formatDate(t.date)}</span>` : ''}
+            ${t.due_time ? `<span class="badge badge-time ${isSoon ? 'soon' : ''}">⏰ ${t.due_time.substring(0,5)}${isSoon ? ' · soon!' : ''}</span>` : ''}
+            ${isOverdue  ? `<span class="badge badge-overdue">⚠ overdue</span>` : ''}
+            ${assignedLabel ? `<span class="badge badge-assignee">👤 ${escapeHtml(assignedLabel)}</span>` : ''}
+            ${t.notes    ? `<span class="badge badge-note" title="${escapeHtml(t.notes)}">📝</span>` : ''}
+          </div>
+        </div>
+        ${isAdmin ? `<div class="task-actions">
+          <button class="chip-act edit-btn" title="Edit">✎</button>
+          <button class="chip-act del del-btn" title="Delete">✕</button>
+        </div>` : ''}
+      `;
+
+      // ── Attach listeners safely via addEventListener ──
+      // 1. Checkbox tick
+      card.querySelector('.task-check').addEventListener('click', e => {
+        e.stopPropagation();
+        toggleDone(t.id);
+      });
+
+      // 2. Edit / Delete buttons (admin only)
+      if (isAdmin) {
+        card.querySelector('.edit-btn').addEventListener('click', e => {
+          e.stopPropagation();
+          openEditTask(t.id);
+        });
+        card.querySelector('.del-btn').addEventListener('click', e => {
+          e.stopPropagation();
+          doDeleteTask(t.id);
+        });
+      }
+
+      container.appendChild(card);
+    });
+  }
+
+  function formatDate(ds) {
+    const [y, m, d] = ds.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  /* ══ TOGGLE DONE ══ */
+  window.toggleDone = async function(id) {
+    const t = tasks.find(x => x.id === id);
+    if (!t) return;
+    const { error } = await db.from('tasks').update({ done: !t.done }).eq('id', id);
+    if (error) return toast('Update failed.', 'err');
+    t.done = !t.done;
+    renderTasks();
+    renderStats();
+    renderMembers();
+    renderDeadlineBanner();
+  };
+
+  /* ══ DELETE TASK (called from addEventListener, no event param needed) ══ */
+  function doDeleteTask(id) {
+    const t = tasks.find(x => x.id === id);
+    confirmAction(`Delete "${t ? t.title : 'this task'}"?`, async () => {
+      const { error } = await db.from('tasks').delete().eq('id', id);
+      if (error) return toast('Delete failed.', 'err');
+      toast('Task deleted.', 'ok');
+      await loadTasks();
+      renderTasks(); renderStats(); renderMembers(); renderDeadlineBanner();
+    });
+  }
+
+  /* ══ MODAL: NEW TASK ══ */
+  window.openNewTaskModal = function() {
+    editTaskId = null;
+    $('taskModalTitle').textContent = 'New Group Task';
+    $('taskTitleInput').value = '';
+    $('taskDateInput').value  = todayStr();
+    $('taskTimeInput').value  = '';
+    $('taskNotesInput').value = '';
+    $('taskDeleteBtn').classList.add('hidden');
+    populateAssignees();
+    $('taskOverlay').classList.remove('hidden');
+    setTimeout(() => $('taskTitleInput').focus(), 50);
+  };
+
+  /* ══ MODAL: EDIT TASK ══ */
+  window.openEditTask = function(id) {
+    const t = tasks.find(x => x.id === id);
+    if (!t) return;
+    editTaskId = id;
+    $('taskModalTitle').textContent = 'Edit Task';
+    $('taskTitleInput').value = t.title;
+    $('taskDateInput').value  = t.date || todayStr();
+    $('taskTimeInput').value  = t.due_time || '';
+    $('taskNotesInput').value = t.notes || '';
+    $('taskDeleteBtn').classList.remove('hidden');
+    populateAssignees(t.assigned_to);
+    $('taskOverlay').classList.remove('hidden');
+    setTimeout(() => $('taskTitleInput').focus(), 50);
+  };
+
+  function populateAssignees(selectedId = null) {
+    const sel = $('taskAssigneeSelect');
+    sel.innerHTML = '<option value="">— Unassigned —</option>';
+    members.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.user_id;
+      opt.textContent = m.user_id === user.id ? 'Me' : `User ${m.user_id.substring(0,10)}…`;
+      if (m.user_id === selectedId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  /* ══ SAVE TASK ══ */
+  window.saveTask = async function() {
+    const title       = $('taskTitleInput').value.trim();
+    if (!title) return toast('Task description required.', 'err');
+    const date        = $('taskDateInput').value || todayStr();
+    const due_time    = $('taskTimeInput').value || null;
+    const notes       = $('taskNotesInput').value.trim() || null;
+    const assigned_to = $('taskAssigneeSelect').value || null;
+
+    if (editTaskId) {
+      const { error } = await db.from('tasks').update({ title, date, due_time, notes, assigned_to }).eq('id', editTaskId);
+      if (error) return toast('Update failed.', 'err');
+      toast('Task updated.', 'ok');
+    } else {
+      const { error } = await db.from('tasks').insert({ title, date, due_time, notes, assigned_to, group_id: currentGroupId, user_id: user.id, done: false });
+      if (error) return toast('Insert failed: ' + error.message, 'err');
+      toast('Task added.', 'ok');
+    }
+    closeModal('taskOverlay');
+    await loadTasks();
+    renderTasks(); renderStats(); renderMembers(); renderDeadlineBanner();
+  };
+
+  /* ══ DELETE TASK ══ */
+  window.deleteCurrentTask = function() {
+    if (!editTaskId) return;
+    const t = tasks.find(x => x.id === editTaskId);
+    confirmAction(`Delete "${t ? t.title : 'this task'}"?`, async () => {
+      const { error } = await db.from('tasks').delete().eq('id', editTaskId);
+      if (error) return toast('Delete failed.', 'err');
+      toast('Task deleted.', 'ok');
+      closeModal('taskOverlay');
+      await loadTasks();
+      renderTasks(); renderStats(); renderMembers(); renderDeadlineBanner();
+    });
+  };
+
+  window.confirmDeleteTask = function(id) {
+    doDeleteTask(id);
+  };
+
+  /* ══ CHAT ══ */
+  async function sendChat() {
+    const input = $('chatInput');
+    const text  = input.value.trim();
+    if (!text) return;
+    input.value = '';
+
+    const { error } = await db.from('group_messages').insert({
+      group_id:   currentGroupId,
+      user_id:    user.id,
+      user_email: user.email,
+      content:    text
+    });
+
+    if (error) {
+      toast('Send failed: ' + error.message, 'err');
+      input.value = text;
+      return;
+    }
+
+    // Luôn load + render ngay sau khi gửi thành công
+    // (không phụ thuộc vào Realtime subscription)
+    await loadMessages();
+    renderChat();
+  }
+
+  function renderChat() {
+    const container = $('chatMessages');
+    if (!messages.length) {
+      container.innerHTML = '<div class="chat-empty">No messages yet. Say hi! 👋</div>';
+      return;
+    }
+    container.innerHTML = '';
+    messages.forEach(msg => {
+      const isMe = msg.user_id === user.id;
+      const initial = (msg.user_email || msg.user_id).charAt(0).toUpperCase();
+      const name = isMe ? 'You' : `${(msg.user_email || msg.user_id).split('@')[0].substring(0,8)}`;
+      const time = new Date(msg.created_at).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+      const div = document.createElement('div');
+      div.className = `chat-msg ${isMe ? 'mine' : ''}`;
+      div.innerHTML = `
+        <div class="chat-avatar">${initial}</div>
+        <div class="chat-bubble">
+          <div class="chat-bubble-text">${escapeHtml(msg.content)}</div>
+          <div class="chat-bubble-meta">${isMe ? '' : name + ' · '}${time}</div>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+    container.scrollTop = container.scrollHeight;
+  }
+
+  // Send on Enter & Send button — gắn thẳng, không cần DOMContentLoaded vì script ở cuối body
+  function initChatListeners() {
+    const ci  = $('chatInput');
+    const btn = $('chatSendBtn');
+    if (ci)  ci.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); } });
+    if (btn) btn.addEventListener('click', () => sendChat());
+  }
+  // Gọi sau khi DOM sẵn sàng (script ở cuối body nên DOM luôn ready)
+  initChatListeners();
+
+  /* ══ COPY ID ══ */
+  window.copyGroupId = function() {
+    navigator.clipboard.writeText(currentGroupId)
+      .then(() => toast('Group ID copied!', 'ok'))
+      .catch(() => toast('Copy failed.', 'err'));
+  };
+
+  /* ══ CONFIRM ══ */
+  function confirmAction(msg, cb) {
+    $('confirmMsg').textContent = msg;
+    confirmCb = cb;
+    $('confirmOverlay').classList.remove('hidden');
+  }
+  $('confirmYes').onclick = () => { closeModal('confirmOverlay'); if (confirmCb) confirmCb(); confirmCb = null; };
+
+  /* ══ MODALS ══ */
+  window.closeModal = function(id) { $(id).classList.add('hidden'); };
+  ['taskOverlay','confirmOverlay'].forEach(id => {
+    $(id).addEventListener('click', e => { if (e.target === $(id)) closeModal(id); });
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') ['taskOverlay','confirmOverlay'].forEach(closeModal);
+  });
+
+  /* ══ TOAST ══ */
+  function toast(msg, type = 'ok') {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`; el.textContent = msg;
+    $('toastWrap').appendChild(el);
+    setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 220); }, 3200);
+  }
+
+  /* ══ ESCAPE ══ */
+  function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+</script>
+</body>
+</html>
