@@ -658,7 +658,7 @@
 
         <button class="btn-tool" id="statsBtn">Stats</button>
         <button class="btn-tool" id="archiveBtn">Archive</button>
-        <button class="btn-tool" id="logoutBtn">End Week ↺</button>
+        <button class="btn-tool" id="endWeekBtn">End Week ↺</button>
       </div>
     </header>
 
@@ -1425,7 +1425,23 @@ function renderProgress() {
       }
     };
 
-    $('logoutBtn').onclick = () => { confirmAction("Are you sure you want to sign out?", async () => { await db.auth.signOut(); }); };
+    $('endWeekBtn').onclick = () => { 
+      confirmAction("Conclude this week? All pending tasks will be marked as done.", async () => { 
+        const base = new Date(); base.setDate(base.getDate() + weekOffset * 7);
+        const mon  = getMonday(base);
+        const sun  = new Date(mon); sun.setDate(mon.getDate() + 6);
+        const monStr = toDateStr(mon), sunStr = toDateStr(sun);
+        const pendingTasks = tasks.filter(t => !t.done && t.date >= monStr && t.date <= sunStr);
+        
+        for (const t of pendingTasks) {
+          await db.from('tasks').update({ done: true }).eq('id', t.id);
+        }
+        
+        toast('Week concluded successfully!', 'ok');
+        weekOffset++;
+        loadAll();
+      }); 
+    };
 
     function toast(msg, type = 'ok') {
       const el = document.createElement('div'); el.className = `toast ${type}`; el.textContent = msg;
