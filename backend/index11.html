@@ -297,6 +297,8 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
       color: var(--ink-soft);
+      position: relative;
+      cursor: pointer;
     }
     .user-avatar {
       width: 22px; height: 22px;
@@ -309,6 +311,34 @@
     }
     .user-email-txt {
       max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .user-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 8px;
+      background: var(--paper);
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 6px;
+      min-width: 150px;
+      display: none;
+      flex-direction: column;
+      z-index: 100;
+    }
+    .user-dropdown.show { display: flex; }
+    .user-dropdown-item {
+      padding: 8px 12px;
+      font-size: 13px;
+      color: var(--ink-soft);
+      border-radius: 6px;
+      text-align: left;
+      transition: var(--t);
+    }
+    .user-dropdown-item:hover {
+      background: var(--bg);
+      color: var(--ink);
     }
 
     .progress-bar-container {
@@ -616,10 +646,14 @@
       <div class="header-tools">
         <button class="btn btn-ghost" id="themeBtn" title="Toggle dark mode" style="font-size: 14px; padding: 4px;">🌙</button>
         
-        <div class="user-chip">
+        <div class="user-chip" id="userChipBtn">
           <div class="user-avatar" id="userAvatar">?</div>
           <div class="user-email-txt" id="userEmail">...</div>
           <span style="font-size: 8px; margin-left: 1px; color: var(--ink-faint);">▼</span>
+          <div class="user-dropdown" id="userDropdown">
+            <button class="user-dropdown-item" id="changePwdBtn">Change Password</button>
+            <button class="user-dropdown-item" id="userLogoutBtn">Log Out</button>
+          </div>
         </div>
 
         <button class="btn-tool" id="statsBtn">Stats</button>
@@ -1523,6 +1557,32 @@ function renderProgress() {
       $('confirmNo').textContent = 'No';
       $('confirmNo').onclick = () => hideOverlay('confirmOverlay');
       loadAll();
+    };
+
+    /* ============================================================
+       USER DROPDOWN MENU LOGIC
+    ============================================================ */
+    $('userChipBtn').onclick = (e) => {
+      e.stopPropagation();
+      $('userDropdown').classList.toggle('show');
+    };
+
+    document.addEventListener('click', () => {
+      if ($('userDropdown')) $('userDropdown').classList.remove('show');
+    });
+
+    $('changePwdBtn').onclick = async () => {
+      const email = user?.email;
+      if (!email) return toast('User email not found', 'err');
+      const { error } = await db.auth.resetPasswordForEmail(email);
+      if (error) return toast('Error sending reset email: ' + error.message, 'err');
+      toast('Reset password email sent! Check your inbox.', 'ok');
+    };
+
+    $('userLogoutBtn').onclick = () => {
+      confirmAction("Are you sure you want to sign out?", async () => { 
+        await db.auth.signOut(); 
+      });
     };
 
   </script>
