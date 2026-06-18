@@ -25,7 +25,7 @@
   - Chức năng End Week: đánh dấu tất cả task của tuần hiện tại là đã kết thúc / lưu lại thống kê tuần, sau đó chuyển sang tuần mới.
   - Thêm nút Logout riêng vào dropdown menu của user.
 - **File liên quan:** `index11.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã hoàn thành
 
 ---
 
