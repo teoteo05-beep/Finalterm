@@ -1818,7 +1818,7 @@
 
         <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line);">
           <button class="add-project-dash" id="deleteAllTasksBtn" style="color: var(--accent); border-color: var(--accent); opacity: 0.8;">
-            ⚠ Xoá toàn bộ Task
+            ⚠ Delete all tasks
           </button>
         </div>
 
@@ -1881,7 +1881,7 @@
           </div>
           <div class="day-view-tasks" id="dayViewTasks"></div>
           <div style="padding: 16px 24px;">
-            <button class="btn btn-primary btn-full" id="dayViewAddBtn">＋ Thêm task cho ngày này</button>
+            <button class="btn btn-primary btn-full" id="dayViewAddBtn">＋ Add task for this day</button>
           </div>
         </div>
 
@@ -1913,12 +1913,12 @@
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Thời hạn (Due Time)</label>
+          <label class="form-label"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Due Time</label>
           <input type="time" class="form-input" id="taskTimeInput" />
         </div>
-        <div class="past-time-warn" id="pastTimeWarn">⚠️ Thời gian này đã qua — task sẽ được đánh dấu là trễ hạn.</div>
+        <div class="past-time-warn" id="pastTimeWarn">⚠️ This time has passed — the task will be marked as overdue.</div>
         <div class="form-group">
-          <label class="form-label">🔥 Mức ưu tiên (Priority)</label>
+          <label class="form-label">🔥 Priority</label>
           <select class="form-input" id="taskPrioritySelect">
             <option value="normal">Normal</option>
             <option value="high">🟡 High</option>
@@ -1926,18 +1926,18 @@
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">🔁 Lặp lại (Repeat)</label>
+          <label class="form-label">🔁 Repeat</label>
           <select class="form-input" id="taskRepeatSelect">
-            <option value="none">Không lặp lại</option>
-            <option value="daily">Hàng ngày (Daily)</option>
-            <option value="weekly">Hàng tuần (Weekly)</option>
-            <option value="monthly">Hàng tháng (Monthly)</option>
+            <option value="none">Does not repeat</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">📝 Sub-task / Ghi chú</label>
+          <label class="form-label">📝 Sub-tasks / Notes</label>
           <textarea class="form-input" id="taskNotesInput" rows="3"
-            placeholder="Nhập ghi chú hoặc sub-task..."></textarea>
+            placeholder="Enter notes or sub-tasks..."></textarea>
         </div>
         <div id="subtasksSection" style="border-top: 1px dashed var(--line); padding-top: 12px; margin-top: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -2350,10 +2350,10 @@
         btn.querySelector('.edit-list-btn').addEventListener('click', e => { e.stopPropagation(); editList(l.id); });
         btn.querySelector('.del-list-btn').addEventListener('click', e => {
           e.stopPropagation();
-          confirmAction(`Xóa project "${l.name}"? Task trong project này sẽ không bị xóa.`, async () => {
+          confirmAction(`Delete project "${l.name}"? Tasks in this project will not be deleted.`, async () => {
             const { error } = await db.from('subjects').delete().eq('id', l.id);
-            if (error) return toast('Lỗi khi xóa project.', 'err');
-            toast('Project đã xóa.', 'ok');
+            if (error) return toast('Error deleting project.', 'err');
+            toast('Project deleted.', 'ok');
             if (listFilter === l.id) listFilter = null;
             loadAll();
           });
@@ -2469,8 +2469,8 @@
         const col = document.createElement('div');
         col.className = `day-col ${isToday ? 'today' : ''}`;
 
-        const DAY_NAMES_VN = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'];
-        const MONTH_NAMES = ['tháng 1', 'tháng 2', 'tháng 3', 'tháng 4', 'tháng 5', 'tháng 6', 'tháng 7', 'tháng 8', 'tháng 9', 'tháng 10', 'tháng 11', 'tháng 12'];
+        const DAY_NAMES_VN = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
         col.innerHTML = `
           <div class="day-col-head" style="cursor:pointer;" data-date="${ds}" data-day-idx="${i}">
@@ -2743,7 +2743,7 @@
       }
 
       editTaskId = id;
-      $('taskModalTitle').textContent = canEdit ? 'Chỉnh sửa Task' : 'Chi tiết Task';
+      $('taskModalTitle').textContent = canEdit ? 'Edit Task' : 'Task Details';
       $('taskTitleInput').value = t.title;
       $('taskTitleInput').disabled = !canEdit;
       $('taskNotesInput').value = t.notes || '';
@@ -2857,8 +2857,8 @@
           if (g && g.userRole !== 'admin') return toast('Permission denied.', 'err');
         }
         const { error } = await db.from('tasks').update({ title, subject_id, group_id, assigned_to, due_time, notes, priority, repeat_mode }).eq('id', editTaskId);
-        if (error) return toast('Lỗi khi cập nhật task.', 'err');
-        toast('Task đã được cập nhật.', 'ok');
+        if (error) return toast('Error updating task.', 'err');
+        toast('Task updated.', 'ok');
       } else {
         // INSERT new task
         const { data, error } = await db.from('tasks').insert({
@@ -2866,11 +2866,11 @@
         }).select();
         if (error) {
           console.error('Task insert error:', error);
-          return toast('Lỗi khi tạo task: ' + (error.message || 'Unknown error'), 'err');
+          return toast('Error creating task: ' + (error.message || 'Unknown error'), 'err');
         }
         parentTaskId = data && data[0] ? data[0].id : null;
-        if (!parentTaskId) return toast('Không lấy được task ID.', 'err');
-        toast('Task đã được tạo.', 'ok');
+        if (!parentTaskId) return toast('Failed to get task ID.', 'err');
+        toast('Task created.', 'ok');
       }
 
       // Handle subtasks
@@ -2915,7 +2915,7 @@
           }).select();
           if (!insertErr && data && data.length > 0) {
             tasks.push(data[0]);
-            toast('Đã tự động tạo task lặp lại cho kỳ tới.');
+            toast('Automatically created recurring task for the next period.');
           }
         }
       }
@@ -3360,9 +3360,9 @@
       dd.innerHTML = `
         <div style="padding:8px 12px;font-size:11px;color:var(--ink-faint);font-family:'JetBrains Mono',monospace;">📧 ${user ? user.email : '...'}</div>
         <div class="user-dropdown-sep"></div>
-        <button class="user-dropdown-item" id="ddChangePassword">🔒 Đổi mật khẩu</button>
+        <button class="user-dropdown-item" id="ddChangePassword">🔒 Change password</button>
         <div class="user-dropdown-sep"></div>
-        <button class="user-dropdown-item danger" id="ddLogout">🚨 Đăng xuất</button>
+        <button class="user-dropdown-item danger" id="ddLogout">🚨 Log out</button>
       `;
       $('userChip').appendChild(dd);
 
@@ -3370,15 +3370,15 @@
         ev.stopPropagation();
         dd.remove();
         const email = user?.email;
-        if (!email) return toast('Không xác định được email.', 'err');
+        if (!email) return toast('Email not found.', 'err');
         const { error } = await db.auth.resetPasswordForEmail(email);
-        if (error) return toast('Lỗi: ' + error.message, 'err');
-        toast('Link đổi mật khẩu đã gửi đến email của bạn.', 'ok');
+        if (error) return toast('Error: ' + error.message, 'err');
+        toast('Password reset link sent to your email.', 'ok');
       };
       dd.querySelector('#ddLogout').onclick = (ev) => {
         ev.stopPropagation();
         dd.remove();
-        confirmAction('Bạn có chắc chắn muốn đăng xuất?', async () => { await db.auth.signOut(); });
+        confirmAction('Are you sure you want to log out?', async () => { await db.auth.signOut(); });
       };
     });
 
@@ -3397,15 +3397,15 @@
       const weekPersonalTasks = tasks.filter(t => !t.group_id && t.date >= monStr && t.date <= sunStr && !t.done);
 
       if (weekPersonalTasks.length === 0) {
-        toast('Đã hoàn thành tất cả task tuần này!', 'info');
+        toast('All tasks for this week completed!', 'info');
         return;
       }
 
-      confirmAction(`Kết thúc tuần: đánh dấu ${weekPersonalTasks.length} task còn lại là hoàn thành và chuyển sang tuần mới?`, async () => {
+      confirmAction(`End week: mark ${weekPersonalTasks.length} remaining tasks as done and move to the next week?`, async () => {
         const ids = weekPersonalTasks.map(t => t.id);
         const { error } = await db.from('tasks').update({ done: true }).in('id', ids);
-        if (error) return toast('Lỗi khi kết thúc tuần.', 'err');
-        toast(`Đã hoàn thành ${ids.length} task. Chuyển sang tuần mới!`, 'ok');
+        if (error) return toast('Error ending week.', 'err');
+        toast(`Completed ${ids.length} tasks. Moved to the new week!`, 'ok');
         weekOffset++;
         loadAll();
       });
@@ -3430,14 +3430,14 @@
 
     if ($('deleteAllTasksBtn')) {
       $('deleteAllTasksBtn').addEventListener('click', () => {
-        $('confirmMessage').textContent = 'Bạn có chắc chắn muốn XÓA TOÀN BỘ task của mình không? Hành động này không thể hoàn tác!';
+        $('confirmMessage').textContent = 'Are you sure you want to DELETE ALL your tasks? This action cannot be undone!';
         confirmCb = async () => {
           const { error } = await db.from('tasks').delete().eq('user_id', user.id);
           if (error) {
-            console.error('Lỗi khi xoá toàn bộ task:', error);
-            return toast('Có lỗi xảy ra khi xoá task.', 'err');
+            console.error('Error deleting all tasks:', error);
+            return toast('An error occurred while deleting tasks.', 'err');
           }
-          toast('Đã xoá toàn bộ task.', 'ok');
+          toast('All tasks deleted.', 'ok');
           loadAll();
         };
         showOverlay('confirmOverlay');
@@ -3456,7 +3456,7 @@
       }
       const matches = tasks.filter(t => !t.group_id && t.title.toLowerCase().includes(q));
       if (matches.length === 0) {
-        resContainer.innerHTML = '<div style="padding: 10px; color: var(--ink-faint); font-size: 13px; text-align: center;">Không tìm thấy task nào</div>';
+        resContainer.innerHTML = '<div style="padding: 10px; color: var(--ink-faint); font-size: 13px; text-align: center;">No tasks found</div>';
       } else {
         resContainer.innerHTML = '';
         matches.forEach(t => {
@@ -3755,7 +3755,7 @@
       if ($('dayViewProgressFill')) $('dayViewProgressFill').style.width = `${pct}%`;
       if ($('dayViewProgressText')) $('dayViewProgressText').textContent = `${doneCount}/${total} • ${pct}%`;
       if (targetTasks.length === 0) {
-        c.innerHTML = '<div style="color:var(--ink-faint);text-align:center;padding:24px;">Chưa có task nào cho ngày này.</div>';
+        c.innerHTML = '<div style="color:var(--ink-faint);text-align:center;padding:24px;">No tasks for this day yet.</div>';
         return;
       }
 
@@ -3900,13 +3900,13 @@
 
           if (diff <= 15 && diff > 5 && !notifiedTasks.has(key15)) {
             notifiedTasks.add(key15);
-            triggerVisualNotification(t, '15 phút nữa');
+            triggerVisualNotification(t, 'in 15 minutes');
           } else if (diff <= 5 && diff > 0 && !notifiedTasks.has(key5)) {
             notifiedTasks.add(key5);
-            triggerVisualNotification(t, '5 phút nữa');
+            triggerVisualNotification(t, 'in 5 minutes');
           } else if (diff <= 0 && diff > -2 && !notifiedTasks.has(key0)) {
             notifiedTasks.add(key0);
-            triggerVisualNotification(t, 'ĐẾN HẠN');
+            triggerVisualNotification(t, 'DUE NOW');
           }
         });
       }, 30000); // Quét mỗi 30 giây

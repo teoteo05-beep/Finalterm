@@ -232,7 +232,7 @@
   - Bao gồm: auth form, task modal, project modal, sidebar, header, day view, stats, archive, user dropdown, end week, warnings...
   - Giữ nguyên tên biến và comment code (không cần dịch code comment).
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã hoàn thành
 
 ---
 
