@@ -256,7 +256,7 @@
   - Click icon → toggle hiển thị mật khẩu (chuyển `type` giữa `password` và `text`).
   - Icon thay đổi trạng thái: mắt mở (đang hiện) / mắt đóng (đang ẩn).
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã hoàn thành
 
 ---
 
@@ -270,6 +270,30 @@
   - Test lại: tạo task daily → đánh dấu done → kiểm tra task mới xuất hiện ở ngày tiếp theo.
 - **File liên quan:** `index.html`
 - **Trạng thái:** `[ ]` Chưa làm
+
+---
+
+### 25. 📊 Sửa thanh tiến độ (Progress Bar) cho to và dễ nhìn hơn
+- **Mô tả:** Thanh tiến độ tuần ở trang chính hiện tại quá mỏng (1px), khó nhìn và không nổi bật.
+- **Yêu cầu:**
+  - Tăng chiều cao thanh `.progress-line-track` (ví dụ: từ `1px` lên `6px` hoặc `8px`).
+  - Bo tròn thanh progress (`border-radius`).
+  - Phần `.progress-fill` nên có gradient hoặc màu nổi bật hơn để dễ nhận biết tiến độ.
+  - Text phần trăm (`progress-stats-text`) cũng cần tăng kích thước font cho dễ đọc.
+- **File liên quan:** `index.html`
+- **Trạng thái:** `[x]` Đã hoàn thành
+
+---
+
+### 26. 📅 Thu nhỏ thanh trượt chuyển tuần (Week Navigation)
+- **Mô tả:** Thanh điều hướng tuần (week-nav-container) hiện tại hơi to, chiếm nhiều không gian trên header, cần thu gọn lại cho cân đối hơn.
+- **Yêu cầu:**
+  - Giảm `min-width` của `.week-nav-container` (ví dụ: từ `190px` xuống `160px`).
+  - Giảm `padding` bên trong cho compact hơn.
+  - Giảm `font-size` của `.week-nav-label` nếu cần.
+  - Đảm bảo nút ‹ › và label vẫn dễ bấm và đọc được sau khi thu nhỏ.
+- **File liên quan:** `index.html`
+- **Trạng thái:** `[x]` Đã hoàn thành
 
 ---
 
