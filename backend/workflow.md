@@ -167,14 +167,15 @@
 
 ---
 
-### 16. 🐛 Sửa lỗi Delete không hoạt động sau khi thêm task
-- **Mô tả:** Sau khi thêm task mới, nút xóa (✕) trên task card không phản hồi — có thể do event listener bị mất sau khi re-render DOM.
+### 16. 🐛 Sửa lỗi nút Delete trong modal chỉnh sửa task không hoạt động
+- **Mô tả:** Sau khi thêm task, người dùng click vào task để mở modal chỉnh sửa, nhấn nút **Delete** nhưng không có phản hồi — task không bị xóa. Nguyên nhân: nút `taskDeleteBtn` trong modal chưa được gán `onclick` handler.
 - **Yêu cầu:**
-  - Kiểm tra và đảm bảo event listener được gán lại đúng cách sau mỗi lần `renderGrid()` được gọi.
-  - Tránh dùng `innerHTML` trực tiếp làm mất listener; ưu tiên `addEventListener` sau khi tạo element.
-  - Test lại sau khi fix: thêm task → xóa task → không bị lỗi.
-- **File liên quan:** `index11.html`
-- **Trạng thái:** `[ ]` Chưa làm
+  - Gán `onclick` handler cho nút `$('taskDeleteBtn')` để gọi hàm `deleteTask()` khi người dùng nhấn Delete.
+  - Khi nhấn Delete → hiển thị confirm dialog → nếu xác nhận → xóa task khỏi database → đóng modal → reload danh sách.
+  - Đảm bảo xóa cả subtasks con (nếu có) khi xóa task cha.
+  - Test lại: tạo task → mở modal chỉnh sửa → nhấn Delete → task bị xóa thành công.
+- **File liên quan:** `index.html`
+- **Trạng thái:** `[x]` Đã hoàn thành
 
 ---
 

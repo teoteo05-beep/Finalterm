@@ -2850,6 +2850,10 @@
       if (e.key === 'Enter') { e.preventDefault(); addSubtaskFromInput(); }
     });
 
+    $('taskDeleteBtn').onclick = () => {
+      if (editTaskId) quickDeleteTask(editTaskId);
+    };
+
     $('taskSaveBtn').onclick = async () => {
       const title = $('taskTitleInput').value.trim();
       if (!title) return toast('Task description missing.', 'err');
@@ -2973,6 +2977,7 @@
           return toast('Error deleting task.', 'err');
         }
         toast('Task removed.', 'ok');
+        hideOverlay('taskOverlay');
         loadAll();
       });
     }
