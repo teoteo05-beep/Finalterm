@@ -270,7 +270,7 @@
   - Kiểm tra trùng lặp: không tạo task lặp nếu đã tồn tại task cùng tên + cùng ngày + chưa done.
   - Test lại: tạo task daily → đánh dấu done → kiểm tra task mới xuất hiện ở ngày tiếp theo.
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã hoàn thành
 
 ---
 

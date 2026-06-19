@@ -2932,8 +2932,10 @@
 
       t.done = targetState;
 
-      if (targetState === true && t.repeat_mode && t.repeat_mode !== 'none') {
-        let nextDate = new Date(t.date);
+      if (targetState === true && t.repeat_mode && t.repeat_mode !== 'none' && t.date) {
+        const [year, month, day] = t.date.split('-').map(Number);
+        let nextDate = new Date(year, month - 1, day);
+        
         if (t.repeat_mode === 'daily') nextDate.setDate(nextDate.getDate() + 1);
         else if (t.repeat_mode === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
         else if (t.repeat_mode === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
