@@ -1,10 +1,11 @@
+﻿<!-- Progress: style: fix app header and progress bar to fixed top position -->
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Planner — Collaborative Weekly Space</title>
-  <meta name="description" content="Planner — A minimalist weekly todo list with team space." />
+  <title>Planner â€” Collaborative Weekly Space</title>
+  <meta name="description" content="Planner â€” A minimalist weekly todo list with team space." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,9 +14,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <style>
-    /* ════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        DESIGN TOKENS (EARTHY DARK THEME)
-    ════════════════════════════════ */
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     :root, [data-theme="dark"] {
       --bg:          #24211a;
       --paper:       #2b261d;
@@ -48,9 +49,9 @@
       --shadow:      0 1px 2px rgba(28,26,23,.04), 0 8px 24px -12px rgba(28,26,23,.14);
     }
 
-    /* ════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        RESET & BASE ELEMENTS
-    ════════════════════════════════ */
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; }
     body {
@@ -70,9 +71,9 @@
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 99px; }
 
-    /* ════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        AUTH SCREEN STYLE
-    ════════════════════════════════ */
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     #authScreen {
       min-height: 100vh;
       display: flex;
@@ -163,9 +164,9 @@
       padding: 4px;
     }
 
-    /* ════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        BUTTONS SYSTEM
-    ════════════════════════════════ */
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     .btn {
       padding: 9px 18px;
       border-radius: 8px;
@@ -212,9 +213,9 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        APP LAYOUT & HEADER
-    ════════════════════════════════ */
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     #appScreen {
       display: grid;
       grid-template-rows: auto auto 1fr;
@@ -379,9 +380,9 @@
       .app-body { grid-template-columns: 1fr; }
     }
 
-    /* ════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        SIDEBAR COLUMNS
-    ════════════════════════════════ */
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     .sidebar { display: flex; flex-direction: column; gap: 20px; }
     .sidebar-section-title {
       font-family: 'JetBrains Mono', monospace;
@@ -438,9 +439,9 @@
     }
     .add-project-dash:hover { border-color: var(--ink-soft); color: var(--ink); background: rgba(255,255,255,0.01); }
 
-    /* ════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        MAIN PLANNER & WORKSPACE
-    ════════════════════════════════ */
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     .planner { display: flex; flex-direction: column; gap: 12px; }
     
     .onboarding-card {
@@ -534,9 +535,9 @@
     .move-pop-day { padding: 4px; background: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; text-align: center; border-radius: 4px; }
     .move-pop-day:hover { background: var(--line-strong); color: var(--ink); }
 
-    /* ════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        OVERLAYS & WINDOW MODALS
-    ════════════════════════════════ */
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     .overlay {
       position: fixed; inset: 0; background: rgba(20, 18, 14, 0.45);
       backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
@@ -574,9 +575,9 @@
       display: flex; flex-direction: column; gap: 4px;
     }
 
-    /* ════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        TOAST NOTIFICATIONS
-    ════════════════════════════════ */
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     .toast-wrap { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 6px; align-items: center; pointer-events: none; }
     .toast { padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow); animation: toastIn .2s ease; white-space: nowrap; pointer-events: auto; }
     .toast.ok { background: var(--good-soft); border: 1px solid var(--good); color: var(--good); }
@@ -592,10 +593,10 @@
   <!-- AUTH SCREEN CONTAINER -->
   <div id="authScreen">
     <div class="auth-card">
-      <button class="auth-theme-btn" id="authThemeBtn" title="Toggle theme">🌙</button>
+      <button class="auth-theme-btn" id="authThemeBtn" title="Toggle theme">đŸŒ™</button>
       
       <div class="auth-brand">
-        <div class="auth-logo">📓</div>
+        <div class="auth-logo">đŸ““</div>
         <p style="margin-top: 8px;">A minimalist space for your week</p>
       </div>
 
@@ -611,7 +612,7 @@
         </div>
         <div class="auth-field">
           <label class="auth-label">Password</label>
-          <input type="password" class="auth-input" id="authPassword" required placeholder="••••••••" minlength="6" />
+          <input type="password" class="auth-input" id="authPassword" required placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" minlength="6" />
         </div>
 
         <div class="auth-notice" id="authNotice"></div>
@@ -631,12 +632,12 @@
       <div class="app-brand"></div>
 
       <div class="header-center">
-        <span class="planning-tag">📅 Planning For</span>
+        <span class="planning-tag">đŸ“… Planning For</span>
         <div class="week-nav-container">
           <div class="week-nav-row">
-            <button class="week-nav-btn" id="weekPrev" title="Previous week">‹</button>
+            <button class="week-nav-btn" id="weekPrev" title="Previous week">â€¹</button>
             <span class="week-nav-label" id="weekLabel">...</span>
-            <button class="week-nav-btn" id="weekNext" title="Next week">›</button>
+            <button class="week-nav-btn" id="weekNext" title="Next week">â€º</button>
           </div>
           <span class="week-subtext">Week Range</span>
         </div>
@@ -644,12 +645,12 @@
       </div>
 
       <div class="header-tools">
-        <button class="btn btn-ghost" id="themeBtn" title="Toggle dark mode" style="font-size: 14px; padding: 4px;">🌙</button>
+        <button class="btn btn-ghost" id="themeBtn" title="Toggle dark mode" style="font-size: 14px; padding: 4px;">đŸŒ™</button>
         
         <div class="user-chip" id="userChipBtn">
           <div class="user-avatar" id="userAvatar">?</div>
           <div class="user-email-txt" id="userEmail">...</div>
-          <span style="font-size: 8px; margin-left: 1px; color: var(--ink-faint);">▼</span>
+          <span style="font-size: 8px; margin-left: 1px; color: var(--ink-faint);">â–¼</span>
           <div class="user-dropdown" id="userDropdown">
             <button class="user-dropdown-item" id="changePwdBtn">Change Password</button>
             <button class="user-dropdown-item" id="userLogoutBtn">Log Out</button>
@@ -658,7 +659,7 @@
 
         <button class="btn-tool" id="statsBtn">Stats</button>
         <button class="btn-tool" id="archiveBtn">Archive</button>
-        <button class="btn-tool" id="endWeekBtn">End Week ↺</button>
+        <button class="btn-tool" id="endWeekBtn">End Week â†º</button>
       </div>
     </header>
 
@@ -667,7 +668,7 @@
       <div class="progress-line-track">
         <div class="progress-fill" id="progressFill"></div>
       </div>
-      <div class="progress-stats-text" id="progressPct">0/0 • 0%</div>
+      <div class="progress-stats-text" id="progressPct">0/0 â€¢ 0%</div>
     </div>
 
     <!-- CORE COLUMN SPLIT LAYER BODY -->
@@ -676,7 +677,7 @@
       <!-- SIDEBAR COMPONENT -->
       <aside class="sidebar">
         <div class="search-wrap">
-          <span class="search-wrap-icon">🔍</span>
+          <span class="search-wrap-icon">đŸ”</span>
           <input type="text" class="search-input" id="searchInput" placeholder="Search tasks..." />
         </div>
 
@@ -684,15 +685,15 @@
           <div class="sidebar-section-title">Filters</div>
           <div class="filter-items">
             <button class="filter-item active" data-f="all">
-              <span>📓 All tasks</span>
+              <span>đŸ““ All tasks</span>
               <span class="filter-count" id="cntAll">0</span>
             </button>
             <button class="filter-item" data-f="pending">
-              <span>⏳ Pending</span>
+              <span>â³ Pending</span>
               <span class="filter-count" id="cntPending">0</span>
             </button>
             <button class="filter-item" data-f="done">
-              <span>✅ Done</span>
+              <span>âœ… Done</span>
               <span class="filter-count" id="cntDone">0</span>
             </button>
           </div>
@@ -746,7 +747,7 @@
     <div class="modal">
       <div class="modal-head">
         <h2 id="taskModalTitle">New Task</h2>
-        <button class="modal-close" id="taskClose">✕</button>
+        <button class="modal-close" id="taskClose">âœ•</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
@@ -779,7 +780,7 @@
     <div class="modal">
       <div class="modal-head">
         <h2>Create a Project List</h2>
-        <button class="modal-close" id="listClose">✕</button>
+        <button class="modal-close" id="listClose">âœ•</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
@@ -887,7 +888,7 @@
     }
 
     function updateThemeIcons(theme) {
-      const ico = theme === 'dark' ? '☀️' : '🌙';
+      const ico = theme === 'dark' ? 'â˜€ï¸' : 'đŸŒ™';
       $('themeBtn').textContent = ico;
       $('authThemeBtn').textContent = ico;
     }
@@ -994,17 +995,17 @@
     }
 
 function renderProgress() {
-  // 1. Lấy ra các phần tử HTML cần cập nhật dữ liệu trên giao diện
+  // 1. Láº¥y ra cĂ¡c pháº§n tá»­ HTML cáº§n cáº­p nháº­t dá»¯ liá»‡u trĂªn giao diá»‡n
   const progressFill = document.getElementById('progressFill');
   const progressPct = document.getElementById('progressPct');
   
-  if (!progressFill || !progressPct) return; // Nếu chưa tải xong giao diện thì dừng lại
+  if (!progressFill || !progressPct) return; // Náº¿u chÆ°a táº£i xong giao diá»‡n thĂ¬ dá»«ng láº¡i
 
-  // 2. Xác định phạm vi ngày trong tuần hiện tại dựa trên weekOffset của ứng dụng bạn
+  // 2. XĂ¡c Ä‘á»‹nh pháº¡m vi ngĂ y trong tuáº§n hiá»‡n táº¡i dá»±a trĂªn weekOffset cá»§a á»©ng dá»¥ng báº¡n
   const base = new Date();
   base.setDate(base.getDate() + (typeof weekOffset !== 'undefined' ? weekOffset : 0) * 7);
   
-  // Hàm bổ trợ lấy ngày Thứ Hai đầu tuần một cách an toàn
+  // HĂ m bá»• trá»£ láº¥y ngĂ y Thá»© Hai Ä‘áº§u tuáº§n má»™t cĂ¡ch an toĂ n
   const getMonday = (d) => {
     const date = new Date(d);
     const day = date.getDay();
@@ -1016,13 +1017,13 @@ function renderProgress() {
   const sun = new Date(mon);
   sun.setDate(mon.getDate() + 6);
 
-  // Định dạng ngày thành chuỗi YYYY-MM-DD để so khớp dữ liệu mảng tasks của bạn
+  // Äá»‹nh dáº¡ng ngĂ y thĂ nh chuá»—i YYYY-MM-DD Ä‘á»ƒ so khá»›p dá»¯ liá»‡u máº£ng tasks cá»§a báº¡n
   const toDateStr = (d) => d.toISOString().split('T')[0];
   const monStr = toDateStr(mon);
   const sunStr = toDateStr(sun);
 
-  // 3. Lọc toàn bộ danh sách công việc thuộc tuần đang xem
-  // Lưu ý: Thay đổi biến 'tasks' bên dưới nếu mảng lưu trữ task của bạn tên là khác (ví dụ: state.tasks)
+  // 3. Lá»c toĂ n bá»™ danh sĂ¡ch cĂ´ng viá»‡c thuá»™c tuáº§n Ä‘ang xem
+  // LÆ°u Ă½: Thay Ä‘á»•i biáº¿n 'tasks' bĂªn dÆ°á»›i náº¿u máº£ng lÆ°u trá»¯ task cá»§a báº¡n tĂªn lĂ  khĂ¡c (vĂ­ dá»¥: state.tasks)
   const currentWeekTasks = (typeof tasks !== 'undefined' ? tasks : []).filter(t => {
     return t.date >= monStr && t.date <= sunStr;
   });
@@ -1030,12 +1031,12 @@ function renderProgress() {
   const total = currentWeekTasks.length;
   const doneCount = currentWeekTasks.filter(t => t.done).length;
   
-  // 4. Tính toán tỷ lệ phần trăm hoàn thành (%)
+  // 4. TĂ­nh toĂ¡n tá»· lá»‡ pháº§n trÄƒm hoĂ n thĂ nh (%)
   const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
 
-  // 5. Cập nhật chính xác lên giao diện theo đúng định dạng "X/Y • P%" của bạn
+  // 5. Cáº­p nháº­t chĂ­nh xĂ¡c lĂªn giao diá»‡n theo Ä‘Ăºng Ä‘á»‹nh dáº¡ng "X/Y â€¢ P%" cá»§a báº¡n
   progressFill.style.width = `${pct}%`;
-  progressPct.textContent = `${doneCount}/${total} • ${pct}%`;
+  progressPct.textContent = `${doneCount}/${total} â€¢ ${pct}%`;
 }
 
     function renderGrid() {
@@ -1070,7 +1071,7 @@ function renderProgress() {
           return true;
         });
 
-        // Trang cá nhân luôn hiện nút thêm task
+        // Trang cĂ¡ nhĂ¢n luĂ´n hiá»‡n nĂºt thĂªm task
         const showAddButton = true;
 
         const col = document.createElement('div');
@@ -1082,7 +1083,7 @@ function renderProgress() {
           </div>
           <div class="day-col-body" data-date="${ds}"></div>
           <div class="day-col-foot ${showAddButton ? '' : 'hidden'}">
-            <button class="add-task-btn" onclick="openNewTask('${ds}')">＋ Add task</button>
+            <button class="add-task-btn" onclick="openNewTask('${ds}')">ï¼‹ Add task</button>
           </div>
         `;
 
@@ -1098,8 +1099,8 @@ function renderProgress() {
             if (l) tagHtml = `<span class="task-tag" style="background:${l.color}22; color:${l.color};">${escapeHtml(l.name)}</span>`;
           }
 
-          const timeHtml = t.due_time ? `<span class="task-time-badge">⏰ ${t.due_time.substring(0,5)}</span>` : '';
-          const notesIndicator = t.notes ? `<span class="task-notes-indicator" title="${escapeHtml(t.notes)}">📝</span>` : '';
+          const timeHtml = t.due_time ? `<span class="task-time-badge">â° ${t.due_time.substring(0,5)}</span>` : '';
+          const notesIndicator = t.notes ? `<span class="task-notes-indicator" title="${escapeHtml(t.notes)}">đŸ“</span>` : '';
 
           card.innerHTML = `
             <div class="task-top">
@@ -1108,12 +1109,12 @@ function renderProgress() {
             </div>
             <div class="task-meta">${tagHtml} ${timeHtml} ${notesIndicator}</div>
             <div class="task-acts">
-              <button class="chip-act move-btn" title="Move Day">📅</button>
-              <button class="chip-act del del-btn" title="Delete Task">✕</button>
+              <button class="chip-act move-btn" title="Move Day">đŸ“…</button>
+              <button class="chip-act del del-btn" title="Delete Task">âœ•</button>
             </div>
           `;
 
-          // Attach listeners safely — no inline onclick strings
+          // Attach listeners safely â€” no inline onclick strings
           card.querySelector('.task-check').addEventListener('click', e => {
             e.stopPropagation();
             toggleTaskStatus(t.id);
@@ -1151,7 +1152,7 @@ function renderProgress() {
       lists.forEach(l => {
         const opt = document.createElement('option');
         opt.value = `personal:${l.id}`;
-        opt.textContent = `📁 ${l.name}`;
+        opt.textContent = `đŸ“ ${l.name}`;
         if (l.id === selectedId) opt.selected = true;
         select.appendChild(opt);
       });
@@ -1257,7 +1258,7 @@ function renderProgress() {
        DEADLINE TIMEOUT NOTIFICATION DAEMON SYSTEM
     ============================================================ */
     function startNotificationDaemon() {
-      // Hỏi quyền trình duyệt
+      // Há»i quyá»n trĂ¬nh duyá»‡t
       if (window.Notification && Notification.permission === 'default') {
         Notification.requestPermission();
       }
@@ -1274,24 +1275,24 @@ function renderProgress() {
           const taskMinutes = h * 60 + m;
           const diff = taskMinutes - currentMinutes;
 
-          // Phát cảnh báo nhắc nhở nếu công việc cận hạn trong khoảng từ 0 đến 30 phút
+          // PhĂ¡t cáº£nh bĂ¡o nháº¯c nhá»Ÿ náº¿u cĂ´ng viá»‡c cáº­n háº¡n trong khoáº£ng tá»« 0 Ä‘áº¿n 30 phĂºt
           if (diff >= 0 && diff <= 30) {
             notifiedTasks.add(t.id);
             triggerVisualNotification(t);
           }
         });
-      }, 60000); // Đập nhịp quét mỗi phút
+      }, 60000); // Äáº­p nhá»‹p quĂ©t má»—i phĂºt
     }
 
     function triggerVisualNotification(task) {
       const alertMessage = `Task upcoming due: "${task.title}" at ${task.due_time.substring(0,5)}!`;
       
-      // 1. Hệ thống Toast góc dưới màn hình
-      toast(`⏰ ${alertMessage}`, 'info');
+      // 1. Há»‡ thá»‘ng Toast gĂ³c dÆ°á»›i mĂ n hĂ¬nh
+      toast(`â° ${alertMessage}`, 'info');
 
-      // 2. Hệ thống Native Browser Notification (Nếu được cấp quyền)
+      // 2. Há»‡ thá»‘ng Native Browser Notification (Náº¿u Ä‘Æ°á»£c cáº¥p quyá»n)
       if (window.Notification && Notification.permission === 'granted') {
-        new Notification("Planner Deadline Reminder", { body: alertMessage, icon: '📓' });
+        new Notification("Planner Deadline Reminder", { body: alertMessage, icon: 'đŸ““' });
       }
     }
 
@@ -1461,7 +1462,7 @@ function renderProgress() {
     $('weekTodayBtn').onclick = () => { weekOffset = 0; renderAll(); };
 
     /* ============================================================
-       SEARCH — re-render grid on every keystroke
+       SEARCH â€” re-render grid on every keystroke
     ============================================================ */
     $('searchInput').addEventListener('input', () => renderGrid());
 
@@ -1483,7 +1484,7 @@ function renderProgress() {
     $('onboardingActionBtn').onclick = () => $('addListBtn').click();
 
     /* ============================================================
-       STATS PANEL — số liệu tổng quan tuần này
+       STATS PANEL â€” sá»‘ liá»‡u tá»•ng quan tuáº§n nĂ y
     ============================================================ */
     $('statsBtn').onclick = () => {
       const base = new Date(); base.setDate(base.getDate() + weekOffset * 7);
@@ -1511,7 +1512,7 @@ function renderProgress() {
       // reuse confirmOverlay as a quick info modal
       $('confirmMessage').innerHTML = `
         <div style="text-align:left">
-          <div style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:14px;">📊 Week Stats</div>
+          <div style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:14px;">đŸ“ Week Stats</div>
           <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--accent);margin-bottom:4px;">${pct}%</div>
           <div style="font-size:12px;color:var(--ink-soft);margin-bottom:16px;">${done} of ${wt.length} personal tasks complete</div>
           ${rows}
@@ -1529,7 +1530,7 @@ function renderProgress() {
     };
 
     /* ============================================================
-       ARCHIVE — show & restore completed tasks
+       ARCHIVE â€” show & restore completed tasks
     ============================================================ */
     $('archiveBtn').onclick = () => {
       const doneTasks = tasks.filter(t => t.done);
@@ -1546,11 +1547,11 @@ function renderProgress() {
           <button onclick="restoreTask('${t.id}')" style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.04em;padding:3px 8px;border-radius:4px;background:var(--good-soft);color:var(--good);border:1px solid var(--good);cursor:pointer;flex-shrink:0;">Restore</button>
         </div>`;
       });
-      if (doneTasks.length > 20) rows += `<div style="font-size:12px;color:var(--ink-faint);padding-top:8px;">… and ${doneTasks.length-20} more</div>`;
+      if (doneTasks.length > 20) rows += `<div style="font-size:12px;color:var(--ink-faint);padding-top:8px;">â€¦ and ${doneTasks.length-20} more</div>`;
 
       $('confirmMessage').innerHTML = `
         <div style="text-align:left">
-          <div style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:14px;">🗂 Completed Tasks</div>
+          <div style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:14px;">đŸ—‚ Completed Tasks</div>
           ${rows}
         </div>`;
       $('confirmYes').classList.add('hidden');
@@ -1604,3 +1605,4 @@ function renderProgress() {
   </script>
 </body>
 </html>
+
