@@ -245,7 +245,7 @@
   - Khi click icon → chuyển `type` từ `password` sang `text` và ngược lại.
   - Ẩn trường Confirm Password khi quay lại tab Sign In.
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã hoàn thành
 
 ---
 

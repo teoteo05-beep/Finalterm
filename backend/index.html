@@ -227,6 +227,21 @@
       background: var(--paper);
     }
 
+    .password-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: var(--ink-faint);
+      font-size: 14px;
+      user-select: none;
+      z-index: 2;
+    }
+    .password-toggle:hover {
+      color: var(--ink);
+    }
+
     .auth-notice {
       padding: 10px 12px;
       border-radius: 8px;
@@ -1722,7 +1737,17 @@
         </div>
         <div class="auth-field">
           <label class="auth-label">Password</label>
-          <input type="password" class="auth-input" id="authPassword" required placeholder="••••••••" minlength="6" />
+          <div style="position: relative;">
+            <input type="password" class="auth-input" id="authPassword" required placeholder="••••••••" minlength="6" style="padding-right: 36px;" />
+            <span class="password-toggle" id="togglePassword" title="Show password">👁</span>
+          </div>
+        </div>
+        <div class="auth-field" id="authConfirmPasswordField" style="display: none;">
+          <label class="auth-label">Confirm Password</label>
+          <div style="position: relative;">
+            <input type="password" class="auth-input" id="authConfirmPassword" placeholder="••••••••" minlength="6" style="padding-right: 36px;" />
+            <span class="password-toggle" id="toggleConfirmPassword" title="Show password">👁</span>
+          </div>
         </div>
 
         <div class="auth-notice" id="authNotice"></div>
@@ -3321,17 +3346,44 @@
        AUTHENTICATION FORM PROCESSING CONTROLLER
     ============================================================ */
     let authMode = 'login';
-    $('tabLoginBtn').onclick = () => { authMode = 'login'; $('tabLoginBtn').classList.add('active'); $('tabSignupBtn').classList.remove('active'); $('authSubmitBtn').querySelector('span').textContent = 'Sign In'; clearAuthNotice(); };
-    $('tabSignupBtn').onclick = () => { authMode = 'signup'; $('tabSignupBtn').classList.add('active'); $('tabLoginBtn').classList.remove('active'); $('authSubmitBtn').querySelector('span').textContent = 'Sign Up'; clearAuthNotice(); };
+    $('tabLoginBtn').onclick = () => { authMode = 'login'; $('tabLoginBtn').classList.add('active'); $('tabSignupBtn').classList.remove('active'); $('authSubmitBtn').querySelector('span').textContent = 'Sign In'; $('authConfirmPasswordField').style.display = 'none'; $('authConfirmPassword').removeAttribute('required'); clearAuthNotice(); };
+    $('tabSignupBtn').onclick = () => { authMode = 'signup'; $('tabSignupBtn').classList.add('active'); $('tabLoginBtn').classList.remove('active'); $('authSubmitBtn').querySelector('span').textContent = 'Sign Up'; $('authConfirmPasswordField').style.display = 'block'; $('authConfirmPassword').setAttribute('required', 'true'); clearAuthNotice(); };
 
     function showAuthNotice(msg, type) { const n = $('authNotice'); n.className = `auth-notice show ${type}`; n.textContent = msg; }
     function clearAuthNotice() { const n = $('authNotice'); n.className = 'auth-notice'; n.textContent = ''; }
+
+    function setupPasswordToggle(inputId, toggleId) {
+      const input = $(inputId);
+      const toggle = $(toggleId);
+      if(!input || !toggle) return;
+      toggle.addEventListener('click', () => {
+        if (input.type === 'password') {
+          input.type = 'text';
+          toggle.textContent = '👁‍🗨';
+          toggle.title = 'Hide password';
+        } else {
+          input.type = 'password';
+          toggle.textContent = '👁';
+          toggle.title = 'Show password';
+        }
+      });
+    }
+    setupPasswordToggle('authPassword', 'togglePassword');
+    setupPasswordToggle('authConfirmPassword', 'toggleConfirmPassword');
 
     $('authForm').onsubmit = async (e) => {
       e.preventDefault(); clearAuthNotice();
       const email = $('authEmail').value.trim();
       const password = $('authPassword').value;
       const btn = $('authSubmitBtn');
+
+      if (authMode === 'signup') {
+        const confirmPassword = $('authConfirmPassword').value;
+        if (password !== confirmPassword) {
+          showAuthNotice('Passwords do not match.', 'error');
+          return;
+        }
+      }
 
       btn.disabled = true; const originalText = btn.querySelector('span').textContent; btn.innerHTML = '<div class="spin"></div>';
 
