@@ -21,6 +21,7 @@
     ════════════════════════════════ */
     :root,
     [data-theme="dark"] {
+      color-scheme: dark;
       --bg: #24211a;
       --paper: #2b261d;
       --ink: #e1dbcd;
@@ -38,6 +39,7 @@
     }
 
     [data-theme="light"] {
+      color-scheme: light;
       --bg: #f4f1ea;
       --paper: #fbfaf6;
       --ink: #1c1a17;
@@ -1201,7 +1203,6 @@
       font-size: 14px;
       width: 100%;
       transition: var(--t);
-      color-scheme: dark;
     }
 
     .form-input:focus {
@@ -1912,7 +1913,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">⏰ Thời hạn (Due Time)</label>
+          <label class="form-label"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Thời hạn (Due Time)</label>
           <input type="time" class="form-input" id="taskTimeInput" />
         </div>
         <div class="past-time-warn" id="pastTimeWarn">⚠️ Thời gian này đã qua — task sẽ được đánh dấu là trễ hạn.</div>
@@ -2527,7 +2528,7 @@
             repeatBadge = `<span class="repeat-badge">🔁 ${repeatLabels[t.repeat_mode] || t.repeat_mode}</span>`;
           }
 
-          const timeHtml = t.due_time ? `<span class="task-time-badge">⏰ ${t.due_time.substring(0, 5)}</span>` : '';
+          const timeHtml = t.due_time ? `<span class="task-time-badge"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 2px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>${t.due_time.substring(0, 5)}</span>` : '';
           const assignHtml = t.assigned_to ? `<span class="task-assignee" title="Assigned">👤 User</span>` : '';
           const notesIndicator = t.notes ? `<span class="task-notes-indicator" title="${escapeHtml(t.notes)}">📝</span>` : '';
 
@@ -3787,7 +3788,7 @@
           repeatBadge = `<span class="repeat-badge">🔁 ${repeatLabels[t.repeat_mode] || t.repeat_mode}</span>`;
         }
 
-        const timeHtml = t.due_time ? `<span class="task-time-badge">⏰ ${t.due_time.substring(0, 5)}</span>` : '';
+        const timeHtml = t.due_time ? `<span class="task-time-badge"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 2px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>${t.due_time.substring(0, 5)}</span>` : '';
         const notesIndicator = t.notes ? `<span class="task-notes-indicator" title="${escapeHtml(t.notes)}">📝</span>` : '';
 
         const children = tasks.filter(x => x.parent_id === t.id);

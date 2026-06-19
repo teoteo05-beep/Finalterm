@@ -221,7 +221,7 @@
   - Thay emoji ⏰ bằng icon SVG đồng hồ chuẩn trong label modal và trên task card badge.
   - Đảm bảo hiển thị tốt ở cả kích thước nhỏ (badge) và lớn (label).
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã hoàn thành
 
 ---
 
