@@ -2924,7 +2924,7 @@
       if (!t) return;
       const targetState = !t.done;
       const { error } = await db.from('tasks').update({ done: targetState }).eq('id', id);
-      if (error) return toast('Status modification network error.', 'err');
+      if (error) { console.error(error); return toast('Error: ' + error.message, 'err'); }
 
       t.done = targetState;
 
