@@ -370,7 +370,7 @@
   - Cập nhật cả sidebar counts (`cntAll`, `cntPending`, `cntDone`) để chỉ đếm task chính.
   - Đảm bảo nhất quán: progress bar, sidebar counts, và Stats đều chỉ đếm task chính.
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã hoàn thành
 
 ---
 
@@ -378,6 +378,11 @@
 - **Mô tả:** Trong modal Archive (Completed Tasks) bị xuất hiện 2 thanh scrollbar dọc lồng nhau. Nguyên nhân do class `.modal-body` cha đã có sẵn thuộc tính `max-height` và `overflow-y: auto`, nhưng nội dung lưới (grid) bên trong lại tiếp tục bị ép thêm một lớp `max-height: 400px` và `overflow-y: auto` nữa.
 - **Cách sửa:** Xóa bỏ thuộc tính `max-height: 400px; overflow-y: auto;` ở thẻ `div` bọc danh sách dạng Grid trong sự kiện onClick của nút `archiveBtn`. Việc cuộn danh sách lúc này sẽ được quản lý tự nhiên bởi thẻ `.modal-body` ngoài cùng giống như các popup khác.
 - **File liên quan:** `index(1).html`
+- **Trạng thái:** `[ ]` Chưa làm
+### 35. 🐛 Sửa lỗi nhân bản task lặp lại do Race Condition (Double-click)
+- **Mô tả:** Khi đánh dấu hoàn thành một task lặp lại (weekly), hệ thống tốn thời gian chờ server phản hồi. Vì giao diện không hiển thị dấu check ngay lập tức và không khóa nút bấm, người dùng dễ tưởng mạng lag nên bấm đúp (double-click). Các luồng gọi API chạy đồng thời do chưa nhận được data mới đều thấy task tuần sau chưa tồn tại, từ đó cùng ra lệnh Insert gây ra lỗi nhân bản 2 hoặc nhiều task ở tuần tiếp theo.
+- **Cách sửa:** Cập nhật cơ chế Optimistic UI cho hàm `toggleTaskStatus`. Tạo biến `processingTasks = new Set()` để lưu id và khóa task đang xử lý, chặn các thao tác click tiếp theo. Đồng thời cập nhật trạng thái `t.done` và gọi `renderAll()` để render lại UI ngay lập tức, sau đó mới `await` gọi API và tính toán tạo task lặp lại. Cuối cùng mới mở khóa.
+- **File liên quan:** `index.html`
 - **Trạng thái:** `[ ]` Chưa làm
 
 ## Thứ Tự Ưu Tiên Triển Khai
