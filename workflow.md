@@ -358,8 +358,8 @@
   - Trong `toggleTaskStatus()`, trước khi tạo task lặp mới, kiểm tra kỹ xem đã tồn tại task cùng `title` + cùng `date` (ngày tiếp theo) + chưa done hay chưa.
   - Nếu đã tồn tại → **không tạo thêm**, chỉ toast thông báo "Task lặp lại đã tồn tại".
   - Kiểm tra cả trường hợp task bị uncheck rồi check lại nhiều lần liên tục.
-- **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **File liên quan:** `index (1).html`
+- **Trạng thái:** `[x]` Đã hoàn thành
 
 ---
 
@@ -374,6 +374,11 @@
 
 ---
 
+### 34. 🐛 Sửa lỗi 2 thanh scrollbar lồng nhau ở Archive
+- **Mô tả:** Trong modal Archive (Completed Tasks) bị xuất hiện 2 thanh scrollbar dọc lồng nhau. Nguyên nhân do class `.modal-body` cha đã có sẵn thuộc tính `max-height` và `overflow-y: auto`, nhưng nội dung lưới (grid) bên trong lại tiếp tục bị ép thêm một lớp `max-height: 400px` và `overflow-y: auto` nữa.
+- **Cách sửa:** Xóa bỏ thuộc tính `max-height: 400px; overflow-y: auto;` ở thẻ `div` bọc danh sách dạng Grid trong sự kiện onClick của nút `archiveBtn`. Việc cuộn danh sách lúc này sẽ được quản lý tự nhiên bởi thẻ `.modal-body` ngoài cùng giống như các popup khác.
+- **File liên quan:** `index.html`
+- **Trạng thái:** `[ ]` Chưa làm
 ## Thứ Tự Ưu Tiên Triển Khai
 
 | STT | Công việc | Độ ưu tiên | Độ phức tạp | File |

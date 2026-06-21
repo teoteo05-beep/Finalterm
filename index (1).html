@@ -3106,8 +3106,21 @@
         else if (t.repeat_mode === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
         
         let targetDateStr = nextDate.getFullYear() + '-' + String(nextDate.getMonth() + 1).padStart(2, '0') + '-' + String(nextDate.getDate()).padStart(2, '0');
-        const existing = tasks.find(x => x.title === t.title && x.date === targetDateStr && !x.done);
-        if (!existing) {
+        
+        // Strict duplicate checking: title + date + subject_id + group_id + not done
+        const existing = tasks.find(x => 
+          x.title === t.title && 
+          x.date === targetDateStr && 
+          x.subject_id === t.subject_id &&
+          x.group_id === t.group_id &&
+          !x.done &&
+          !x.parent_id  // exclude subtasks
+        );
+        
+        if (existing) {
+          console.log('Recurring task already exists, skipping duplicate creation', { existing });
+          toast('Recurring task for this period already exists.', 'info');
+        } else {
           const { data, error: insertErr } = await db.from('tasks').insert({
             user_id: user.id, title: t.title, date: targetDateStr, subject_id: t.subject_id, group_id: t.group_id,
             assigned_to: t.assigned_to, due_time: t.due_time, notes: t.notes, parent_id: t.parent_id, done: false,
@@ -3115,7 +3128,11 @@
           }).select();
           if (!insertErr && data && data.length > 0) {
             tasks.push(data[0]);
-            toast('Automatically created recurring task for the next period.');
+            console.log('Recurring task created successfully', data[0]);
+            toast('Automatically created recurring task for the next period.', 'ok');
+          } else if (insertErr) {
+            console.error('Error creating recurring task:', insertErr);
+            toast('Could not create recurring task.', 'err');
           }
         }
       }
