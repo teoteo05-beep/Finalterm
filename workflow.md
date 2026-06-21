@@ -315,7 +315,7 @@
   - Đổi text trong `.onboarding-header h2` từ "Good morning" → **"Hello"**.
   - Ví dụ: "Hello. Let's plan your week."
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã hoàn thành
 
 ---
 
