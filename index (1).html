@@ -2881,6 +2881,16 @@
     }
 
     window.openNewTask = function (dateStr) {
+      // Check if user has any projects (personal or group as admin)
+      const hasPersonalProjects = lists && lists.length > 0;
+      const hasGroupProjects = groups && groups.some(g => g.userRole === 'admin');
+      
+      if (!hasPersonalProjects && !hasGroupProjects) {
+        toast('Create a project first before adding tasks.', 'info');
+        $('addListBtn').click();
+        return;
+      }
+
       editTaskId = null;
       targetTaskDate = dateStr;
       $('taskModalTitle').textContent = 'New Task';
@@ -3009,12 +3019,17 @@
       if (!title) return toast('Task description missing.', 'err');
 
       const spaceVal = $('taskSubjSelect').value;
-      if (!spaceVal) return toast('Please select a space or project.', 'err');
+      if (!spaceVal) return toast('Please select a project or space first.', 'err');
 
       let subject_id = null;
       let group_id = null;
       if (spaceVal.startsWith('personal:')) subject_id = spaceVal.split(':')[1];
       if (spaceVal.startsWith('group:')) group_id = spaceVal.split(':')[1];
+
+      // Ensure task belongs to a project
+      if (!subject_id && !group_id) {
+        return toast('Task must be assigned to a project. Please select a project.', 'err');
+      }
 
       if (group_id) {
         const g = groups.find(x => x.id === group_id);

@@ -347,8 +347,8 @@
   - Xóa option `-- No Category / Personal --` khỏi dropdown `taskSubjSelect`.
   - Nếu chưa có project nào → hiển thị thông báo yêu cầu tạo project trước.
   - Validate: không cho save task nếu chưa chọn project.
-- **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **File liên quan:** `index (1).html`
+- **Trạng thái:** `[x]` Đã hoàn thành
 
 ---
 
