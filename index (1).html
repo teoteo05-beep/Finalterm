@@ -2479,18 +2479,19 @@
       const sun = getMonday(base); sun.setDate(sun.getDate() + 6);
       const sunStr = toDateStr(sun);
 
-      // Personal page: count only tasks not belonging to a group
-      const weekTasks = tasks.filter(t => t.date >= monStr && t.date <= sunStr && !t.group_id);
+      // Week root tasks, excluding subtasks
+      const weekRootTasks = tasks.filter(t => t.date >= monStr && t.date <= sunStr && !t.parent_id);
+      const personalWeekTasks = weekRootTasks.filter(t => !t.group_id);
 
-      $('cntAll').textContent = weekTasks.length;
-      $('cntPending').textContent = weekTasks.filter(t => !t.done).length;
-      $('cntDone').textContent = weekTasks.filter(t => t.done).length;
+      $('cntAll').textContent = personalWeekTasks.length;
+      $('cntPending').textContent = personalWeekTasks.filter(t => !t.done).length;
+      $('cntDone').textContent = personalWeekTasks.filter(t => t.done).length;
 
       // Personal projects
       const listContainer = $('listItems');
       listContainer.innerHTML = '';
       lists.forEach(l => {
-        const count = weekTasks.filter(t => t.subject_id === l.id && !t.group_id).length;
+        const count = personalWeekTasks.filter(t => t.subject_id === l.id).length;
         const btn = document.createElement('button');
         btn.className = `list-item ${listFilter === l.id ? 'active' : ''}`;
         btn.onclick = () => { listFilter = (listFilter === l.id) ? null : l.id; renderAll(); };
@@ -2584,10 +2585,10 @@
       const monStr = toDateStr(mon);
       const sunStr = toDateStr(sun);
 
-      // 3. Filter all task entries that belong to the current week
+      // 3. Filter all root task entries that belong to the current week
       // Note: change the tasks variable below if your task array uses a different name (e.g. state.tasks)
       const currentWeekTasks = (typeof tasks !== 'undefined' ? tasks : []).filter(t => {
-        return t.date >= monStr && t.date <= sunStr;
+        return t.date >= monStr && t.date <= sunStr && !t.parent_id;
       });
 
       const total = currentWeekTasks.length;
@@ -3699,7 +3700,7 @@
         resContainer.style.display = 'none';
         return;
       }
-      const matches = tasks.filter(t => !t.group_id && t.title.toLowerCase().includes(q));
+      const matches = tasks.filter(t => !t.group_id && !t.parent_id && t.title.toLowerCase().includes(q));
       if (matches.length === 0) {
         resContainer.innerHTML = '<div style="padding: 10px; color: var(--ink-faint); font-size: 13px; text-align: center;">No tasks found</div>';
       } else {
