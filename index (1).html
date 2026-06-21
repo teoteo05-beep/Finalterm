@@ -2725,17 +2725,13 @@
       const select = $('taskSubjSelect');
       select.innerHTML = '';
 
-      const optNone = document.createElement('option');
-      optNone.value = '';
-      optNone.textContent = '-- No Category / Personal --';
-      select.appendChild(optNone);
-
+      const projectOptions = [];
       lists.forEach(l => {
         const opt = document.createElement('option');
         opt.value = `personal:${l.id}`;
         opt.textContent = `📁 ${l.name}`;
         if (!isGroup && l.id === selectedId) opt.selected = true;
-        select.appendChild(opt);
+        projectOptions.push(opt);
       });
 
       groups.forEach(g => {
@@ -2744,13 +2740,28 @@
           opt.value = `group:${g.id}`;
           opt.textContent = `👥 ${g.name}`;
           if (isGroup && g.id === selectedId) opt.selected = true;
-          select.appendChild(opt);
+          projectOptions.push(opt);
         }
       });
 
+      if (projectOptions.length === 0) {
+        const optEmpty = document.createElement('option');
+        optEmpty.value = '';
+        optEmpty.textContent = '-- Create a project first --';
+        optEmpty.disabled = true;
+        select.appendChild(optEmpty);
+        select.disabled = true;
+        return;
+      }
+
+      projectOptions.forEach(opt => select.appendChild(opt));
+      select.disabled = false;
+
       if (selectedId) {
         const matchingOption = Array.from(select.options).find(o => o.selected || o.value.endsWith(`:${selectedId}`));
-        if (!matchingOption) select.value = '';
+        if (!matchingOption) select.selectedIndex = 0;
+      } else if (!select.value && select.options.length > 0) {
+        select.selectedIndex = 0;
       }
     }
 

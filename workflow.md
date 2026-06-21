@@ -326,7 +326,7 @@
   - Đảm bảo `targetTaskDate` được gán chính xác là ngày đang xem trong Day Detail.
   - Test: mở Day View ngày Thứ Ba → thêm task → task chỉ xuất hiện ở Thứ Ba.
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã hoàn thành
 
 ---
 
@@ -337,7 +337,7 @@
   - Cập nhật cả phần per-day breakdown để chỉ đếm task chính.
   - Hiển thị: "X of Y tasks complete" — chỉ tính task chính.
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã hoàn thành
 
 ---
 
