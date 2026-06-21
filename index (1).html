@@ -2233,6 +2233,8 @@
     let groupModalMode = 'create';
     let activeManageGroupId = null;
     let notifiedTasks = new Set();
+    // Track tasks currently being processed to prevent double-click race conditions
+    let processingTasks = new Set();
     let pendingSubtasks = [];
 
     window.addEventListener('unhandledrejection', event => {
@@ -3088,56 +3090,39 @@
     };
 
     window.toggleTaskStatus = async function (id) {
-      const t = tasks.find(x => x.id === id);
-      if (!t) return;
-      const targetState = !t.done;
-      const { error } = await db.from('tasks').update({ done: targetState }).eq('id', id);
-      if (error) { console.error(error); return toast('Error: ' + error.message, 'err'); }
+      if (processingTasks.has(id)) return; // already processing this task
+      processingTasks.add(id);
+      try {
+        const t = tasks.find(x => x.id === id);
+        if (!t) return;
+        const originalDone = t.done;
+        const targetState = !originalDone;
 
-      t.done = targetState;
+        // Optimistic UI: update local state immediately and re-render
+        t.done = targetState;
+        renderAll();
 
-      if (targetState === true && t.repeat_mode && t.repeat_mode !== 'none' && t.date) {
-        const [year, month, day] = t.date.split('-').map(Number);
-        let nextDate = new Date(year, month - 1, day);
-        
-        if (t.repeat_mode === 'daily') nextDate.setDate(nextDate.getDate() + 1);
-        else if (t.repeat_mode === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
-        else if (t.repeat_mode === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
-        
-        let targetDateStr = nextDate.getFullYear() + '-' + String(nextDate.getMonth() + 1).padStart(2, '0') + '-' + String(nextDate.getDate()).padStart(2, '0');
-        
-        // Strict duplicate checking: title + date + subject_id + group_id + not done
-        const existing = tasks.find(x => 
-          x.title === t.title && 
-          x.date === targetDateStr && 
-          x.subject_id === t.subject_id &&
-          x.group_id === t.group_id &&
-          !x.done &&
-          !x.parent_id  // exclude subtasks
-        );
-        
-        if (existing) {
-          console.log('Recurring task already exists, skipping duplicate creation', { existing });
-          toast('Recurring task for this period already exists.', 'info');
-        } else {
-          const { data, error: insertErr } = await db.from('tasks').insert({
-            user_id: user.id, title: t.title, date: targetDateStr, subject_id: t.subject_id, group_id: t.group_id,
-            assigned_to: t.assigned_to, due_time: t.due_time, notes: t.notes, parent_id: t.parent_id, done: false,
-            priority: t.priority, repeat_mode: t.repeat_mode
-          }).select();
-          if (!insertErr && data && data.length > 0) {
-            tasks.push(data[0]);
-            console.log('Recurring task created successfully', data[0]);
-            toast('Automatically created recurring task for the next period.', 'ok');
-          } else if (insertErr) {
-            console.error('Error creating recurring task:', insertErr);
-            toast('Could not create recurring task.', 'err');
-          }
+        // Persist change to server
+        const { error } = await db.from('tasks').update({ done: targetState }).eq('id', id);
+        if (error) {
+          console.error(error);
+          // revert optimistic change on error
+          t.done = originalDone;
+          toast('Error: ' + (error.message || 'Failed to update task status'), 'err');
+          return;
         }
-      }
 
-      renderAll();
-      if (typeof dayViewDate !== 'undefined' && dayViewDate && !$('dayViewPage').classList.contains('hidden')) renderDayView();
+        // If marking done and task repeats, the DB trigger will create the next occurrence.
+        // Refresh tasks after a short delay so we pick up the server-created recurring task
+        if (targetState === true && t.repeat_mode && t.repeat_mode !== 'none' && t.date) {
+          // give the DB trigger a moment to insert the recurring task, then reload
+          setTimeout(() => { loadAll(); }, 300);
+        }
+      } finally {
+        processingTasks.delete(id);
+        renderAll();
+        if (typeof dayViewDate !== 'undefined' && dayViewDate && !$('dayViewPage').classList.contains('hidden')) renderDayView();
+      }
     };
 
     window.quickDeleteTask = function (id) {
