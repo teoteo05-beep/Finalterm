@@ -305,7 +305,7 @@
   - Hiển thị rõ ràng tên task, ngày hoàn thành, project.
   - Giữ nút Restore cho mỗi task.
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã làm
 
 ---
 
@@ -315,7 +315,7 @@
   - Đổi text trong `.onboarding-header h2` từ "Good morning" → **"Hello"**.
   - Ví dụ: "Hello. Let's plan your week."
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã làm
 
 ---
 
@@ -326,7 +326,7 @@
   - Đảm bảo `targetTaskDate` được gán chính xác là ngày đang xem trong Day Detail.
   - Test: mở Day View ngày Thứ Ba → thêm task → task chỉ xuất hiện ở Thứ Ba.
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã làm
 
 ---
 
@@ -337,7 +337,7 @@
   - Cập nhật cả phần per-day breakdown để chỉ đếm task chính.
   - Hiển thị: "X of Y tasks complete" — chỉ tính task chính.
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã làm
 
 ---
 
@@ -348,7 +348,7 @@
   - Nếu chưa có project nào → hiển thị thông báo yêu cầu tạo project trước.
   - Validate: không cho save task nếu chưa chọn project.
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã làm
 
 ---
 
@@ -359,7 +359,7 @@
   - Nếu đã tồn tại → **không tạo thêm**, chỉ toast thông báo "Task lặp lại đã tồn tại".
   - Kiểm tra cả trường hợp task bị uncheck rồi check lại nhiều lần liên tục.
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã làm
 
 ---
 
@@ -370,7 +370,7 @@
   - Cập nhật cả sidebar counts (`cntAll`, `cntPending`, `cntDone`) để chỉ đếm task chính.
   - Đảm bảo nhất quán: progress bar, sidebar counts, và Stats đều chỉ đếm task chính.
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã làm
 
 ---
 
@@ -422,7 +422,7 @@
   - Cập nhật `populateSpaceDropdown()` để không hiện group options.
   - Test: đảm bảo app vẫn hoạt động bình thường sau khi xóa toàn bộ group code.
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã làm
 
 ---
 
