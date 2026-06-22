@@ -1965,19 +1965,7 @@
           </button>
         </div>
 
-        <!-- 
-        <div>
-          <div class="sidebar-section-title">
-            <span>👥 Team Groups</span>
-            <button id="groupManageActionBtn" style="font-size: 10px; color: var(--accent);">Manage</button>
-          </div>
-          <div class="list-items" id="groupItems"></div>
-          <div class="sidebar-btn-group">
-            <button class="add-project-dash" id="createGroupBtn">Create Group</button>
-            <button class="add-project-dash" id="joinGroupBtn">Join Code</button>
-          </div>
-        </div>
-        -->
+
       </aside>
 
       <!-- DATA PLATFORM MAIN WORKSPACE PANELS -->
@@ -1995,8 +1983,8 @@
             <div class="step-item">
               <div class="step-num">1</div>
               <div class="step-content">
-                <h3>Make a project or group</h3>
-                <p>Create a personal list or collaborative group to start planning with your teammates.</p>
+                <h3>Make a project</h3>
+                <p>Create a personal list to start planning.</p>
               </div>
             </div>
           </div>
@@ -2049,12 +2037,7 @@
           <label class="form-label">Project / Space</label>
           <select class="form-input" id="taskSubjSelect"></select>
         </div>
-        <div class="form-group" id="assigneeGroup">
-          <label class="form-label">Assign To (Team Mode)</label>
-          <select class="form-input" id="taskAssigneeSelect">
-            <option value="">-- Unassigned --</option>
-          </select>
-        </div>
+
         <div class="form-group">
           <label class="form-label"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Due Time</label>
           <input type="time" class="form-input" id="taskTimeInput" />
@@ -2124,64 +2107,7 @@
     </div>
   </div>
 
-  <!-- TEAM GROUP MODAL -->
-  <div class="overlay hidden" id="groupOverlay">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="groupModalTitle">👥 Manage Your Teams</h2>
-        <button class="modal-close" onclick="hideOverlay('groupOverlay')">✕</button>
-      </div>
-      <div class="modal-body">
 
-        <!-- CREATE MODE -->
-        <div id="groupCreateFields" class="hidden">
-          <div class="form-group">
-            <label class="form-label">Team Name</label>
-            <input type="text" class="form-input" id="groupNameInput" placeholder="e.g. Marketing Squad" />
-          </div>
-        </div>
-
-        <!-- JOIN MODE -->
-        <div id="groupJoinFields" class="hidden">
-          <div class="form-group">
-            <label class="form-label">Invite Code / Group ID</label>
-            <input type="text" class="form-input" id="groupJoinIdInput" placeholder="Paste the group ID here" />
-          </div>
-        </div>
-
-        <!-- MANAGE MODE -->
-        <div id="groupManageFields" class="hidden">
-          <label class="form-label">1. Select a Team from list</label>
-          <div id="manageGroupList"
-            style="display:flex; flex-direction:column; gap:6px; max-height:180px; overflow-y:auto; border:1px solid var(--line); padding:6px; border-radius:6px; background:var(--bg); margin-bottom: 12px;">
-          </div>
-
-          <div id="editGroupSection" class="hidden"
-            style="margin-top:10px; display:flex; flex-direction:column; gap:12px; border-top:1px dashed var(--line); padding-top:14px;">
-            <div class="form-group">
-              <label class="form-label">Team Name</label>
-              <input type="text" class="form-input" id="editGroupNameInput" placeholder="Enter new team name" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Invite Code (Share with others)</label>
-              <input type="text" class="form-input" id="editGroupCodeInput" readonly
-                style="opacity:0.7; cursor:not-allowed;" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Members</label>
-              <div id="groupMembersList"
-                style="display:flex; flex-direction:column; gap:6px; max-height:140px; overflow-y:auto;"></div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-      <div class="modal-foot">
-        <button class="btn btn-danger hidden" id="groupLeaveBtn">Leave / Delete Team</button>
-        <button class="btn btn-primary hidden" id="groupSaveBtn">Save Changes</button>
-      </div>
-    </div>
-  </div>
 
   <!-- CONFIRM OVERLAY -->
   <div class="overlay hidden" id="confirmOverlay">
@@ -2216,14 +2142,11 @@
 
     let tasks = [];
     let lists = [];
-    let groups = [];
-    let groupMembersCache = {};
     let user = null;
     let weekOffset = 0;
     let filterMode = 'all';
     let listFilter = null;
     let editingListId = null;
-    let groupFilter = null;
     let editTaskId = null;
     let targetTaskDate = null;
     let collapsedTaskIds = new Set();
@@ -2231,8 +2154,6 @@
     let confirmCb = null;
     let realtimeCh = null;
     let movingTaskId = null;
-    let groupModalMode = 'create';
-    let activeManageGroupId = null;
     let notifiedTasks = new Set();
     // Track tasks currently being processed to prevent double-click race conditions
     let processingTasks = new Set();
@@ -2358,7 +2279,7 @@
         console.warn('loadAll aborted because user is null or signed out');
         return;
       }
-      await Promise.all([loadLists(), loadGroups(), loadTasks()]);
+      await Promise.all([loadLists(), loadTasks()]);
       renderAll();
     }
 
@@ -2367,66 +2288,11 @@
       if (!error && data) lists = data;
     }
 
-    async function loadGroups() {
-      // Load groups where current user is a member
-      groups = [];
-      groupMembersCache = {};
-      const { data: memberships, error: memErr } = await db.from('group_members').select('group_id, role').eq('user_id', user.id);
-      if (memErr) {
-        console.error('loadGroups membership query failed:', memErr);
-        groups = [];
-        return;
-      }
-      if (!memberships) {
-        console.warn('loadGroups returned no membership data');
-        groups = [];
-        return;
-      }
-      console.log('loadGroups memberships', memberships.length, memberships.map(m => m.group_id));
-
-      const groupIds = memberships.map(m => m.group_id);
-      if (groupIds.length === 0) {
-        groups = [];
-        return;
-      }
-
-      const { data: groupData, error: gErr } = await db.from('groups').select('*').in('id', groupIds);
-      if (gErr) {
-        console.error('loadGroups group query failed:', gErr);
-        groups = [];
-        return;
-      }
-      if (!groupData) {
-        console.warn('loadGroups returned no group data');
-        groups = [];
-        return;
-      }
-      console.log('loadGroups groupData', groupData.map(g => g.id));
-
-      groups = groupData.map(g => {
-        const m = memberships.find(x => x.group_id === g.id);
-        return { ...g, userRole: m ? m.role : 'member' };
-      });
-
-      // Load member list for these groups for display and assignment
-      for (const gid of groupIds) {
-        const { data: members } = await db.from('group_members').select('user_id, role').eq('group_id', gid);
-        if (members) groupMembersCache[gid] = members;
-      }
-    }
-
     async function loadTasks() {
-      // Load personal tasks and tasks from groups the user has joined
-      const gIds = groups.map(g => g.id);
-      let query = db.from('tasks').select('*');
-
-      if (gIds.length > 0) {
-        query = query.or(`user_id.eq.${user.id},group_id.in.(${gIds.join(',')})`);
-      } else {
-        query = query.eq('user_id', user.id);
-      }
-
-      const { data, error } = await query.order('due_time', { ascending: true });
+      const { data, error } = await db.from('tasks')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('due_time', { ascending: true });
       if (!error && data) tasks = data;
     }
 
@@ -2435,8 +2301,6 @@
       realtimeCh = db.channel('tido-rt-v2')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => loadAll())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'subjects' }, () => loadAll())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'groups' }, () => loadAll())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'group_members' }, () => loadAll())
         .subscribe();
     }
 
@@ -2482,7 +2346,7 @@
 
       // Week root tasks, excluding subtasks
       const weekRootTasks = tasks.filter(t => t.date >= monStr && t.date <= sunStr && !t.parent_id);
-      const personalWeekTasks = weekRootTasks.filter(t => !t.group_id);
+      const personalWeekTasks = weekRootTasks;
 
       $('cntAll').textContent = personalWeekTasks.length;
       $('cntPending').textContent = personalWeekTasks.filter(t => !t.done).length;
@@ -2533,29 +2397,7 @@
         listContainer.appendChild(btn);
       });
 
-      // Collaborative Groups
-      const groupContainer = $('groupItems');
-      if (groupContainer) {
-        groupContainer.innerHTML = '';
-        groups.forEach(g => {
-          const count = weekTasks.filter(t => t.group_id === g.id).length;
-          const btn = document.createElement('button');
-          btn.className = `list-item`;
-          btn.title = `Open group: ${g.name}`;
-          btn.onclick = () => { window.location.href = `group.html?id=${g.id}`; };
-          btn.innerHTML = `
-            <span class="list-dot" style="background:${g.color || '#caa030'}"></span>
-            <span class="list-name">${escapeHtml(g.name)}</span>
-            <span class="list-role">${g.userRole === 'admin' ? '👑 Adm' : 'Mem'}</span>
-            <span class="list-count" title="Tasks this week">${count}</span>
-            <span style="font-size:10px; color:var(--ink-faint); margin-left:2px;">→</span>
-          `;
-          groupContainer.appendChild(btn);
-        });
-      }
 
-      // Ensure groupFilter remains null because groups now use a separate page
-      groupFilter = null;
     }
 
     function renderProgress() {
@@ -2604,7 +2446,7 @@
     }
 
     function renderGrid() {
-      if (lists.length === 0 && groups.length === 0) {
+      if (lists.length === 0) {
         $('onboardingCard').classList.remove('hidden');
         $('daysGrid').classList.add('hidden');
         $('searchCount').textContent = '';
@@ -2630,7 +2472,7 @@
 
         const dayTasks = tasks.filter(t => {
           if (t.date !== ds) return false;
-          if (t.group_id) return false;
+
           if (listFilter && t.subject_id !== listFilter) return false;
           if (filterMode === 'pending') return !t.done;
           if (filterMode === 'done') return t.done;
@@ -2681,10 +2523,7 @@
           card.onclick = () => openEditTask(t.id);
 
           let tagHtml = '';
-          if (t.group_id) {
-            const g = groups.find(x => x.id === t.group_id);
-            if (g) tagHtml = `<div class="task-tag-clean">${escapeHtml(g.name)}</div>`;
-          } else if (t.subject_id) {
+          if (t.subject_id) {
             const l = lists.find(x => x.id === t.subject_id);
             if (l) tagHtml = `<div class="task-tag-clean">${escapeHtml(l.name)}</div>`;
           }
@@ -2704,11 +2543,7 @@
           const assignHtml = t.assigned_to ? `<span class="task-assignee" title="Assigned">👤 User</span>` : '';
           const notesIndicator = t.notes ? `<span class="task-notes-indicator" title="${escapeHtml(t.notes)}">📝</span>` : '';
 
-          let hasControl = true;
-          if (t.group_id) {
-            const g = groups.find(x => x.id === t.group_id);
-            if (g && g.userRole !== 'admin') hasControl = false;
-          }
+
 
           const children = childrenMap.get(t.id) || [];
           const isCollapsed = collapsedTaskIds.has(t.id);
@@ -2768,26 +2603,16 @@
       optNone.textContent = '-- No parent task / top-level task --';
       select.appendChild(optNone);
 
-      const value = selectedSpace || $('taskSubjSelect').value;
+      const spaceId = selectedSpace || $('taskSubjSelect').value;
       const targetDate = dateStr || targetTaskDate || todayStr();
-      let spaceType = null;
-      let spaceId = null;
-      if (value.startsWith('personal:')) {
-        spaceType = 'personal';
-        spaceId = value.split(':')[1];
-      } else if (value.startsWith('group:')) {
-        spaceType = 'group';
-        spaceId = value.split(':')[1];
-      }
 
-      if (!spaceType || !spaceId) return;
+      if (!spaceId) return;
       const excludedIds = editTaskId ? [editTaskId, ...getTaskDescendants(editTaskId)] : [];
 
       const filteredTasks = tasks.filter(t => {
         if (t.date !== targetDate) return false;
         if (excludedIds.includes(t.id)) return false;
-        if (spaceType === 'personal') return t.subject_id === spaceId && !t.group_id;
-        return t.group_id === spaceId;
+        return t.subject_id === spaceId;
       });
 
       const tree = new Map();
@@ -2825,43 +2650,13 @@
       }
     };
 
-    function populateAssigneeDropdown(groupId, selectedUserId = null) {
-      const select = $('taskAssigneeSelect');
-      select.innerHTML = '<option value="">-- Unassigned --</option>';
-      const members = groupMembersCache[groupId] || [];
-      members.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m.user_id;
-        opt.textContent = m.user_id === user.id ? "Me" : `User (${m.user_id.substring(0, 5)})`;
-        if (m.user_id === selectedUserId) opt.selected = true;
-        select.appendChild(opt);
-      });
-    }
 
-    function populateSpaceDropdown(selectedId = null, isGroup = false) {
+
+    function populateSpaceDropdown(selectedId = null) {
       const select = $('taskSubjSelect');
       select.innerHTML = '';
 
-      const projectOptions = [];
-      lists.forEach(l => {
-        const opt = document.createElement('option');
-        opt.value = `personal:${l.id}`;
-        opt.textContent = `📁 ${l.name}`;
-        if (!isGroup && l.id === selectedId) opt.selected = true;
-        projectOptions.push(opt);
-      });
-
-      groups.forEach(g => {
-        if (g.userRole === 'admin' || (isGroup && g.id === selectedId)) {
-          const opt = document.createElement('option');
-          opt.value = `group:${g.id}`;
-          opt.textContent = `👥 ${g.name}`;
-          if (isGroup && g.id === selectedId) opt.selected = true;
-          projectOptions.push(opt);
-        }
-      });
-
-      if (projectOptions.length === 0) {
+      if (lists.length === 0) {
         const optEmpty = document.createElement('option');
         optEmpty.value = '';
         optEmpty.textContent = '-- Create a project first --';
@@ -2871,23 +2666,22 @@
         return;
       }
 
-      projectOptions.forEach(opt => select.appendChild(opt));
-      select.disabled = false;
+      lists.forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l.id;
+        opt.textContent = `📁 ${l.name}`;
+        if (l.id === selectedId) opt.selected = true;
+        select.appendChild(opt);
+      });
 
-      if (selectedId) {
-        const matchingOption = Array.from(select.options).find(o => o.selected || o.value.endsWith(`:${selectedId}`));
-        if (!matchingOption) select.selectedIndex = 0;
-      } else if (!select.value && select.options.length > 0) {
+      select.disabled = false;
+      if (!select.value && select.options.length > 0) {
         select.selectedIndex = 0;
       }
     }
 
     window.openNewTask = function (dateStr) {
-      // Check if user has any projects (personal or group as admin)
-      const hasPersonalProjects = lists && lists.length > 0;
-      const hasGroupProjects = groups && groups.some(g => g.userRole === 'admin');
-      
-      if (!hasPersonalProjects && !hasGroupProjects) {
+      if (lists.length === 0) {
         toast('Create a project first before adding tasks.', 'info');
         $('addListBtn').click();
         return;
@@ -2907,7 +2701,7 @@
       pendingSubtasks = [];
 
       let preselectId = listFilter;
-      populateSpaceDropdown(preselectId, false);
+      populateSpaceDropdown(preselectId);
       $('taskSubjSelect').dispatchEvent(new Event('change'));
 
       showOverlay('taskOverlay');
@@ -2929,13 +2723,9 @@
       }
 
       let canEdit = true;
-      if (t.group_id) {
-        const g = groups.find(x => x.id === t.group_id);
-        if (g && g.userRole !== 'admin') canEdit = false;
-      }
 
       editTaskId = id;
-      $('taskModalTitle').textContent = canEdit ? 'Edit Task' : 'Task Details';
+      $('taskModalTitle').textContent = 'Edit Task';
       $('taskTitleInput').value = t.title;
       $('taskTitleInput').disabled = !canEdit;
       $('taskTimeInput').value = t.due_time || '';
@@ -2949,16 +2739,8 @@
       if (canEdit) $('taskDeleteBtn').classList.remove('hidden');
       else $('taskDeleteBtn').classList.add('hidden');
 
-      populateSpaceDropdown(t.group_id || t.subject_id, !!t.group_id);
+      populateSpaceDropdown(t.subject_id);
       $('taskSubjSelect').disabled = !canEdit;
-
-      if (t.group_id) {
-        $('assigneeGroup').classList.remove('hidden');
-        populateAssigneeDropdown(t.group_id, t.assigned_to);
-        $('taskAssigneeSelect').disabled = !canEdit;
-      } else {
-        $('assigneeGroup').classList.add('hidden');
-      }
 
       // Load existing subtasks into pendingSubtasks
       pendingSubtasks = tasks
@@ -3023,22 +2805,13 @@
       const spaceVal = $('taskSubjSelect').value;
       if (!spaceVal) return toast('Please select a project or space first.', 'err');
 
-      let subject_id = null;
-      let group_id = null;
-      if (spaceVal.startsWith('personal:')) subject_id = spaceVal.split(':')[1];
-      if (spaceVal.startsWith('group:')) group_id = spaceVal.split(':')[1];
+      let subject_id = spaceVal;
 
       // Ensure task belongs to a project
-      if (!subject_id && !group_id) {
+      if (!subject_id) {
         return toast('Task must be assigned to a project. Please select a project.', 'err');
       }
 
-      if (group_id) {
-        const g = groups.find(x => x.id === group_id);
-        if (g && g.userRole !== 'admin') return toast('Members cannot add or edit group tasks.', 'err');
-      }
-
-      const assigned_to = group_id ? ($('taskAssigneeSelect').value || null) : null;
       const due_time = $('taskTimeInput').value || null;
       const notes = null;
       const priority = $('taskPrioritySelect').value || 'normal';
@@ -3051,18 +2824,13 @@
 
       if (editTaskId) {
         // UPDATE existing task
-        const original = tasks.find(x => x.id === editTaskId);
-        if (original && original.group_id) {
-          const g = groups.find(x => x.id === original.group_id);
-          if (g && g.userRole !== 'admin') return toast('Permission denied.', 'err');
-        }
-        const { error } = await db.from('tasks').update({ title, subject_id, group_id, assigned_to, due_time, notes, priority, repeat_mode }).eq('id', editTaskId);
+        const { error } = await db.from('tasks').update({ title, subject_id, due_time, notes, priority, repeat_mode }).eq('id', editTaskId);
         if (error) return toast('Error updating task.', 'err');
         toast('Task updated.', 'ok');
       } else {
         // INSERT new task
         const { data, error } = await db.from('tasks').insert({
-          user_id: user.id, title, date: targetTaskDate, subject_id, group_id, assigned_to, due_time, notes, parent_id: null, done: false, priority, repeat_mode
+          user_id: user.id, title, date: targetTaskDate, subject_id, due_time, notes, parent_id: null, done: false, priority, repeat_mode
         }).select();
         if (error) {
           console.error('Task insert error:', error);
@@ -3082,7 +2850,7 @@
       }
       for (const s of toAdd) {
         await db.from('tasks').insert({
-          user_id: user.id, title: s.title, date: targetTaskDate || tasks.find(x => x.id === parentTaskId)?.date, subject_id, group_id, assigned_to: null, due_time: null, notes: null, parent_id: parentTaskId, done: false
+          user_id: user.id, title: s.title, date: targetTaskDate || tasks.find(x => x.id === parentTaskId)?.date, subject_id, due_time: null, notes: null, parent_id: parentTaskId, done: false
         });
       }
 
@@ -3151,214 +2919,6 @@
       });
     }
 
-    /* ============================================================
-       GROUP COLLABORATION LOGIC MANAGEMENT
-    ============================================================ */
-    if ($('createGroupBtn')) $('createGroupBtn').onclick = () => {
-      groupModalMode = 'create';
-      $('groupModalTitle').textContent = 'Create Team Project Group';
-      $('groupCreateFields').classList.remove('hidden');
-      $('groupJoinFields').classList.add('hidden');
-      $('groupManageFields').classList.add('hidden');
-      $('groupLeaveBtn').classList.add('hidden');
-      $('groupSaveBtn').classList.remove('hidden');
-      $('groupSaveBtn').textContent = 'Create Group';
-      $('groupNameInput').value = '';
-      showOverlay('groupOverlay');
-    };
-
-    if ($('joinGroupBtn')) $('joinGroupBtn').onclick = () => {
-      groupModalMode = 'join';
-      $('groupModalTitle').textContent = 'Join Team Group via Invite Code';
-      $('groupCreateFields').classList.add('hidden');
-      $('groupJoinFields').classList.remove('hidden');
-      $('groupManageFields').classList.add('hidden');
-      $('groupLeaveBtn').classList.add('hidden');
-      $('groupSaveBtn').classList.remove('hidden');
-      $('groupSaveBtn').textContent = 'Join Group';
-      $('groupJoinIdInput').value = '';
-      showOverlay('groupOverlay');
-    };
-
-    if ($('groupManageActionBtn')) $('groupManageActionBtn').onclick = () => {
-      activeManageGroupId = null;
-      groupModalMode = 'manage';
-      $('groupModalTitle').textContent = '👥 Manage Your Teams';
-      $('groupCreateFields').classList.add('hidden');
-      $('groupJoinFields').classList.add('hidden');
-      $('groupManageFields').classList.remove('hidden');
-      $('editGroupSection').classList.add('hidden');
-      $('groupLeaveBtn').classList.add('hidden');
-      $('groupSaveBtn').classList.add('hidden');
-      renderManageGroupList();
-      showOverlay('groupOverlay');
-    };
-
-    // Render list of existing groups in the management panel
-    function renderManageGroupList() {
-      const listEl = $('manageGroupList');
-      listEl.innerHTML = '';
-
-      if (!groups || groups.length === 0) {
-        listEl.innerHTML = `<div style="font-size:12px; color:var(--ink-faint); padding:12px 0; text-align:center;">You are not in any teams.</div>`;
-        return;
-      }
-
-      groups.forEach(g => {
-        const div = document.createElement('div');
-        div.style = 'display:flex; justify-content:space-between; align-items:center; padding:10px; border-radius:6px; border:1px solid var(--line); cursor:pointer; background:var(--paper); transition: background .15s;';
-        div.innerHTML = `
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${g.color || 'var(--accent)'}"></span>
-            <span style="font-weight:500; font-size:13px; color:var(--ink);">${escapeHtml(g.name)}</span>
-            <span style="font-size:10px; color:var(--ink-faint);">${g.userRole === 'admin' ? '👑 Admin' : 'Member'}</span>
-          </div>
-          <span style="font-size:11px; color:var(--accent);">Select ➔</span>
-        `;
-        div.addEventListener('click', () => selectManageGroup(g, listEl, div));
-        listEl.appendChild(div);
-      });
-    }
-
-    // When selecting a group in the management panel, populate the edit form
-    function selectManageGroup(g, listEl, divEl) {
-      Array.from(listEl.children).forEach(c => c.style.background = 'var(--paper)');
-      divEl.style.background = 'var(--accent-soft)';
-
-      activeManageGroupId = g.id;
-      $('editGroupNameInput').value = g.name || '';
-      $('editGroupCodeInput').value = g.id || '';
-      $('editGroupSection').classList.remove('hidden');
-      $('groupSaveBtn').classList.remove('hidden');
-      $('groupSaveBtn').textContent = 'Save Changes';
-      $('groupLeaveBtn').classList.remove('hidden');
-      $('groupLeaveBtn').textContent = g.userRole === 'admin' ? 'Delete Team' : 'Leave Team';
-
-      const mList = $('groupMembersList');
-      mList.innerHTML = '';
-      const members = groupMembersCache[g.id] || [];
-      if (!members.length) {
-        mList.innerHTML = '<div style="font-size:11px;color:var(--ink-faint);">No member data loaded.</div>';
-      } else {
-        members.forEach(m => {
-          const d = document.createElement('div');
-          d.style = "display:flex; justify-content:space-between; font-size:12px; padding:4px; background:var(--bg); border-radius:4px;";
-          d.innerHTML = `<span>👤 User ID: ${m.user_id.substring(0, 8)}...</span> <span style="color:var(--accent)">${m.role.toUpperCase()}</span>`;
-          mList.appendChild(d);
-        });
-      }
-    }
-
-    $('groupSaveBtn').onclick = async () => {
-      if (groupModalMode === 'create') {
-        const name = $('groupNameInput').value.trim();
-        if (!name) return toast('Group name missing.', 'err');
-
-        const randColor = LIST_COLORS[Math.floor(Math.random() * LIST_COLORS.length)];
-        const { data: gData, error: gErr } = await db.from('groups').insert({ name, color: randColor, created_by: user.id }).select().single();
-        if (gErr || !gData) return toast('Error initiating cluster network.', 'err');
-
-        await db.from('group_members').insert({ group_id: gData.id, user_id: user.id, role: 'admin' });
-        toast('Team project group operational.', 'ok');
-      }
-      else if (groupModalMode === 'join') {
-        const gid = $('groupJoinIdInput').value.trim();
-        if (!gid) return toast('Group ID required.', 'err');
-
-        const { data: checkG } = await db.from('groups').select('id').eq('id', gid).single();
-        if (!checkG) return toast('Group not found. Invalid Invite Code.', 'err');
-
-        const { error: jErr } = await db.from('group_members').insert({ group_id: gid, user_id: user.id, role: 'member' });
-        if (jErr) {
-          if (jErr.code === '23505') return toast('You are already a member of this group.', 'info');
-          return toast('Join transit vector aborted.', 'err');
-        }
-        toast('Successfully peer-connected to group.', 'ok');
-      }
-      else if (groupModalMode === 'manage') {
-        if (!activeManageGroupId) return toast('Please select a team from the list first.', 'err');
-        const newName = $('editGroupNameInput').value.trim();
-        if (!newName) return toast('Team name cannot be empty.', 'err');
-
-        const { error } = await db.from('groups').update({ name: newName }).eq('id', activeManageGroupId);
-        if (error) return toast('Failed to update team name.', 'err');
-        toast('Team name updated successfully!', 'ok');
-      }
-
-      hideOverlay('groupOverlay');
-      loadAll();
-    };
-
-    $('groupLeaveBtn').onclick = () => {
-      if (!activeManageGroupId) return;
-      const g = groups.find(x => x.id === activeManageGroupId);
-      if (!g) return;
-      const isCreator = g.created_by === user?.id;
-
-      if (g.userRole === 'admin') {
-        confirmAction("You are an admin. Leaving will delete this group space for everyone. Proceed?", async () => {
-          console.log('Deleting admin group', g.id, 'isCreator', isCreator, 'userId', user?.id);
-          toast('Deleting team... Please wait.', 'info');
-
-          try {
-            const session = await db.auth.getSession();
-            const token = session.data?.session?.access_token;
-            console.log('Token available:', !!token);
-
-            const response = await fetch('https://zvpuegaworuzwltpknan.supabase.co/functions/v1/delete-group', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': token ? `Bearer ${token}` : ''
-              },
-              body: JSON.stringify({ groupId: g.id, userId: user.id })
-            });
-
-            console.log('Response status:', response.status);
-            const result = await response.json();
-            console.log('Edge function result:', result);
-
-            if (!response.ok) {
-              console.error('Delete failed:', result.error);
-              return toast('Delete failed: ' + (result.error || 'Unknown error'), 'err');
-            }
-
-            groupFilter = null;
-            activeManageGroupId = null;
-            groupMembersCache = {};
-            groups = [];
-            hideOverlay('groupOverlay');
-            await loadAll();
-            console.log('loadAll finished, groups now:', groups.map(x => x.id));
-
-            const stillExists = groups.some(x => x.id === g.id);
-            console.log('Group deletion completed, stillExists:', stillExists);
-            if (stillExists) {
-              toast('Team delete attempted, but the group still appears. Check console.', 'warn');
-            } else {
-              toast('Team deleted successfully.', 'ok');
-            }
-          } catch (err) {
-            console.error('Delete group error:', err);
-            toast('Delete failed: ' + err.message, 'err');
-          }
-        });
-      } else {
-        confirmAction("Leave this group project?", async () => {
-          console.log('Leaving group', g.id, 'user', user?.id, 'isCreator', isCreator);
-          toast('Leaving team... Please wait.', 'info');
-
-          const { error } = await db.from('group_members').delete().eq('group_id', g.id).eq('user_id', user.id);
-          if (error) {
-            console.error('Leave group failed:', error);
-            return toast('Leave group failed. Please try again.', 'err');
-          }
-          groupFilter = null;
-          hideOverlay('groupOverlay');
-          loadAll();
-        });
-      }
-    };
 
 
     /* ============================================================
@@ -3479,11 +3039,11 @@
     function showOverlay(id) { $(id).classList.remove('hidden'); }
     function hideOverlay(id) { $(id).classList.add('hidden'); }
 
-    ['taskOverlay', 'listOverlay', 'groupOverlay', 'confirmOverlay'].forEach(id => {
+    ['taskOverlay', 'listOverlay', 'confirmOverlay'].forEach(id => {
       $(id).addEventListener('click', e => { if (e.target === $(id)) hideOverlay(id); });
     });
 
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') ['taskOverlay', 'listOverlay', 'groupOverlay', 'confirmOverlay'].forEach(hideOverlay); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') ['taskOverlay', 'listOverlay', 'confirmOverlay'].forEach(hideOverlay); });
 
     const bindClick = (id, handler) => {
       const el = $(id);
@@ -3494,8 +3054,6 @@
     bindClick('taskCancel', () => hideOverlay('taskOverlay'));
     bindClick('listClose', () => hideOverlay('listOverlay'));
     bindClick('listCancel', () => hideOverlay('listOverlay'));
-    bindClick('groupClose', () => hideOverlay('groupOverlay'));
-    bindClick('groupCancel', () => hideOverlay('groupOverlay'));
 
     bindClick('confirmYes', () => {
       console.log('confirmYes clicked', { confirmCb });
@@ -3624,7 +3182,7 @@
       const mon = getMonday(base);
       const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
       const monStr = toDateStr(mon), sunStr = toDateStr(sun);
-      const weekPersonalTasks = tasks.filter(t => !t.group_id && t.date >= monStr && t.date <= sunStr && !t.done);
+      const weekPersonalTasks = tasks.filter(t => t.date >= monStr && t.date <= sunStr && !t.done);
 
       if (weekPersonalTasks.length === 0) {
         toast('All tasks for this week completed!', 'info');
@@ -3685,7 +3243,7 @@
         resContainer.style.display = 'none';
         return;
       }
-      const matches = tasks.filter(t => !t.group_id && !t.parent_id && t.title.toLowerCase().includes(q));
+      const matches = tasks.filter(t => !t.parent_id && t.title.toLowerCase().includes(q));
       if (matches.length === 0) {
         resContainer.innerHTML = '<div style="padding: 10px; color: var(--ink-faint); font-size: 13px; text-align: center;">No tasks found</div>';
       } else {
@@ -3748,7 +3306,7 @@
       const mon = getMonday(base);
       const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
       const monStr = toDateStr(mon), sunStr = toDateStr(sun);
-      const wt = tasks.filter(t => !t.group_id && !t.parent_id && t.date >= monStr && t.date <= sunStr);
+      const wt = tasks.filter(t => !t.parent_id && t.date >= monStr && t.date <= sunStr);
       const done = wt.filter(t => t.done).length;
       const pct = wt.length ? Math.round(done / wt.length * 100) : 0;
 
@@ -3788,7 +3346,7 @@
        ARCHIVE — show & restore completed tasks
     ============================================================ */
     $('archiveBtn').onclick = () => {
-      const doneTasks = tasks.filter(t => !t.group_id && t.done);
+      const doneTasks = tasks.filter(t => t.done);
 
       if (!doneTasks.length) {
         toast('No completed tasks to archive.', 'info');
@@ -4003,7 +3561,7 @@
       if (!c) return;
       c.innerHTML = '';
 
-      const targetTasks = tasks.filter(t => t.date === dayViewDate && !t.parent_id && !t.group_id);
+      const targetTasks = tasks.filter(t => t.date === dayViewDate && !t.parent_id);
       const total = targetTasks.length;
       const doneCount = targetTasks.filter(t => t.done).length;
       const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
