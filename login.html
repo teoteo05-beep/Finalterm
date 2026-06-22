@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — TIDO Planner</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+  <!-- AUTH SCREEN CONTAINER -->
+  <div id="authScreen">
+    <div class="auth-card">
+      <button class="auth-theme-btn" id="authThemeBtn" title="Toggle theme">🌙</button>
+
+      <div class="auth-brand">
+        <div class="auth-logo">📓</div>
+        <p style="margin-top: 8px;">A minimalist space for your week</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLoginBtn">Sign In</button>
+        <button class="auth-tab" id="tabSignupBtn">Sign Up</button>
+      </div>
+
+      <form class="auth-form" id="authForm" onsubmit="return false;">
+        <div class="auth-field">
+          <label class="auth-label">Email address</label>
+          <input type="email" class="auth-input" id="authEmail" required placeholder="name@example.com" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">Password</label>
+          <div style="position: relative;">
+            <input type="password" class="auth-input" id="authPassword" required placeholder="••••••••" minlength="6" style="padding-right: 36px;" />
+            <span class="password-toggle" id="togglePassword" title="Show password">👁</span>
+          </div>
+        </div>
+        <div class="auth-field" id="authConfirmPasswordField" style="display: none;">
+          <label class="auth-label">Confirm Password</label>
+          <div style="position: relative;">
+            <input type="password" class="auth-input" id="authConfirmPassword" placeholder="••••••••" minlength="6" style="padding-right: 36px;" />
+            <span class="password-toggle" id="toggleConfirmPassword" title="Show password">👁</span>
+          </div>
+        </div>
+
+        <div class="auth-notice" id="authNotice"></div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="authSubmitBtn">
+          <span>Sign In</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <!-- Tách các file JS (Modules) -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/modals.js"></script>
+  <script src="assets/js/auth.js"></script>
+</body>
+</html>

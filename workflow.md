@@ -136,7 +136,7 @@
   - Khi chưa đăng nhập → redirect sang `login.html`; khi đăng nhập thành công → redirect sang `index11.html`.
   - Đảm bảo theme, Supabase config được dùng chung hoặc import nhất quán.
 - **File liên quan:** `index11.html` → tách thành `index11.html` + `login.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã hoàn thành
 
 ---
 

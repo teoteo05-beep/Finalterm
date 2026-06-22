@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planner — Collaborative Weekly Space</title>
+  <meta name="description" content="Planner — A minimalist weekly todo list with team space." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+
+  <!-- AUTH SCREEN CONTAINER -->
+  <div id="authScreen">
+    <div class="auth-card">
+      <button class="auth-theme-btn" id="authThemeBtn" title="Toggle theme">🌙</button>
+
+      <div class="auth-brand">
+        <div class="auth-logo">📓</div>
+        <p style="margin-top: 8px;">A minimalist space for your week</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLoginBtn">Sign In</button>
+        <button class="auth-tab" id="tabSignupBtn">Sign Up</button>
+      </div>
+
+      <form class="auth-form" id="authForm" onsubmit="return false;">
+        <div class="auth-field">
+          <label class="auth-label">Email address</label>
+          <input type="email" class="auth-input" id="authEmail" required placeholder="name@example.com" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">Password</label>
+          <div style="position: relative;">
+            <input type="password" class="auth-input" id="authPassword" required placeholder="••••••••" minlength="6" style="padding-right: 36px;" />
+            <span class="password-toggle" id="togglePassword" title="Show password">👁</span>
+          </div>
+        </div>
+        <div class="auth-field" id="authConfirmPasswordField" style="display: none;">
+          <label class="auth-label">Confirm Password</label>
+          <div style="position: relative;">
+            <input type="password" class="auth-input" id="authConfirmPassword" placeholder="••••••••" minlength="6" style="padding-right: 36px;" />
+            <span class="password-toggle" id="toggleConfirmPassword" title="Show password">👁</span>
+          </div>
+        </div>
+
+        <div class="auth-notice" id="authNotice"></div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="authSubmitBtn">
+          <span>Sign In</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN APP APPLICATION SCREEN -->
+  <div id="appScreen" class="hidden">
+
+    <!-- TOP APP HEADER BAR -->
+    <header class="app-header" id="appHeader">
+      <div class="app-brand"></div>
+
+      <div class="header-center">
+        <span class="planning-tag">📅 Planning For</span>
+        <div class="week-nav-container">
+          <div class="week-nav-row">
+            <button class="week-nav-btn" id="weekPrev" title="Previous week">‹</button>
+            <span class="week-nav-label" id="weekLabel">...</span>
+            <button class="week-nav-btn" id="weekNext" title="Next week">›</button>
+          </div>
+          <span class="week-relative" id="weekRelative">This week</span>
+        </div>
+        <button class="btn-tool" id="weekTodayBtn" title="Jump to current week">This Week</button>
+        <button class="btn-tool" id="weekNextBtn" title="Jump to next week">Next Week</button>
+      </div>
+
+      <div class="header-tools">
+        <button class="btn btn-ghost" id="themeBtn" title="Toggle dark mode"
+          style="font-size: 14px; padding: 4px;">🌙</button>
+
+        <div class="user-chip" id="userChip">
+          <div class="user-avatar" id="userAvatar">?</div>
+          <div class="user-email-txt" id="userEmail" title="">...</div>
+          <span style="font-size: 8px; margin-left: 1px; color: var(--ink-faint);">▼</span>
+        </div>
+
+        <button class="btn-tool" id="statsBtn">Stats</button>
+        <button class="btn-tool" id="archiveBtn">Archive</button>
+        <button class="btn-tool" id="endWeekBtn">End Week ↺</button>
+      </div>
+    </header>
+
+    <!-- FULL WIDTH WEEK PROGRESS TRACKBAR BAR -->
+    <div class="progress-bar-container" id="appProgressBar">
+      <div class="progress-line-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-stats-text" id="progressPct">0/0 • 0%</div>
+    </div>
+
+    <!-- CORE COLUMN SPLIT LAYER BODY -->
+    <div class="app-body">
+
+      <!-- SIDEBAR COMPONENT -->
+      <aside class="sidebar" id="appSidebar">
+        <div class="search-wrap" style="position: relative;">
+          <svg class="search-wrap-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" class="search-input" id="searchInput" placeholder="Search tasks globally..." autocomplete="off" />
+          <div id="searchResults" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; margin-top: 4px; max-height: 300px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></div>
+          <div class="search-count" id="searchCount"></div>
+        </div>
+
+        <div>
+          <div class="sidebar-section-title">Filters</div>
+          <div class="filter-items">
+            <button class="filter-item active" data-f="all">
+              <span>📓 All tasks</span>
+              <span class="filter-count" id="cntAll">0</span>
+            </button>
+            <button class="filter-item" data-f="pending">
+              <span>⏳ Pending</span>
+              <span class="filter-count" id="cntPending">0</span>
+            </button>
+            <button class="filter-item" data-f="done">
+              <span>✅ Done</span>
+              <span class="filter-count" id="cntDone">0</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <div class="sidebar-section-title">Personal Projects</div>
+          <div class="list-items" id="listItems"></div>
+          <button class="add-project-dash" id="addListBtn" style="margin-top: 10px;">
+            + Add Project
+          </button>
+        </div>
+
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line);">
+          <button class="add-project-dash" id="deleteAllTasksBtn" style="color: var(--accent); border-color: var(--accent); opacity: 0.8;">
+            ⚠ Delete all tasks
+          </button>
+        </div>
+
+
+      </aside>
+
+      <!-- DATA PLATFORM MAIN WORKSPACE PANELS -->
+      <main class="planner">
+        <div class="sidebar-section-title" id="workspaceTitle">This Week</div>
+
+        <!-- INTUITIVE ONBOARDING STEPS CARD CONTAINER -->
+        <div class="onboarding-card hidden" id="onboardingCard">
+          <div class="onboarding-header">
+            <h2>Hello. Let's plan your week.</h2>
+            <p>Three quick steps and your days fill themselves in.</p>
+          </div>
+
+          <div class="step-list">
+            <div class="step-item">
+              <div class="step-num">1</div>
+              <div class="step-content">
+                <h3>Make a project</h3>
+                <p>Create a personal list to start planning.</p>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="onboardingActionBtn"
+            style="align-self: flex-start; margin-top: 6px; padding: 10px 20px;">
+            + Add Your First Project
+          </button>
+        </div>
+
+        <!-- 7-DAYS GRID DATA VIEWPORT BOARD -->
+        <div class="days-grid" id="daysGrid"></div>
+
+        <!-- MỤC 18: DAY VIEW PAGE -->
+        <div class="day-view-page hidden" id="dayViewPage">
+          <div class="day-view-header">
+            <h2 id="dayViewTitle">...</h2>
+            <button class="btn btn-ghost" id="dayViewClose" style="font-size:14px;">← Back</button>
+          </div>
+          <div class="day-view-progress">
+            <div class="day-view-progress-track">
+              <div class="day-view-progress-fill" id="dayViewProgressFill"></div>
+            </div>
+            <span class="day-view-progress-text" id="dayViewProgressText">0/0</span>
+          </div>
+          <div class="day-view-tasks" id="dayViewTasks"></div>
+          <div style="padding: 16px 24px;">
+            <button class="btn btn-primary btn-full" id="dayViewAddBtn">＋ Add task for this day</button>
+          </div>
+        </div>
+
+      </main>
+
+    </div>
+  </div>
+
+  <!-- OVERLAYS & MODALS LAYERS WINDOWS -->
+  <div class="overlay hidden" id="taskOverlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="taskModalTitle">New Task</h2>
+        <button class="modal-close" id="taskClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Task Description</label>
+          <input type="text" class="form-input" id="taskTitleInput" placeholder="What needs to be done?" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Project / Space</label>
+          <select class="form-input" id="taskSubjSelect"></select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Due Time</label>
+          <input type="time" class="form-input" id="taskTimeInput" />
+        </div>
+        <div class="past-time-warn" id="pastTimeWarn">⚠️ This time has passed — the task will be marked as overdue.</div>
+        <div class="form-group">
+          <label class="form-label">🔥 Priority</label>
+          <select class="form-input" id="taskPrioritySelect">
+            <option value="normal">Normal</option>
+            <option value="high">🟡 High</option>
+            <option value="urgent">🔴 Urgent</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">🔁 Repeat</label>
+          <select class="form-input" id="taskRepeatSelect">
+            <option value="none">Does not repeat</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+
+        <div id="subtasksSection" style="border-top: 1px dashed var(--line); padding-top: 12px; margin-top: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <label class="form-label" style="margin: 0;">📋 Sub-tasks</label>
+          </div>
+          <div id="subtasksList" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px;"></div>
+          <div style="display: flex; gap: 6px;">
+            <input type="text" class="form-input" id="subtaskInput" placeholder="Add a sub-task..."
+              style="flex:1; font-size:13px; padding: 7px 10px;" />
+            <button type="button" class="btn btn-sm btn-primary" id="addSubtaskInlineBtn" style="flex-shrink:0;">+
+              Add</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" id="taskCancel">Cancel</button>
+        <button class="btn btn-danger hidden" id="taskDeleteBtn">Delete</button>
+        <button class="btn btn-primary" id="taskSaveBtn">Save Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERSONAL LIST MODAL -->
+  <div class="overlay hidden" id="listOverlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="listModalTitle">Create a Project List</h2>
+        <button class="modal-close" id="listClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Project name</label>
+          <input type="text" class="form-input" id="listNameInput" placeholder="Work, Personal, Studies..." required />
+        </div>
+        <div class="form-group">
+          <label class="label">Theme color marker</label>
+          <div class="color-swatches" id="colorSwatches"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" id="listCancel">Cancel</button>
+        <button class="btn btn-danger hidden" id="listDeleteBtn">Delete List</button>
+        <button class="btn btn-primary" id="listSaveBtn">Create List</button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- CONFIRM OVERLAY -->
+  <div class="overlay hidden" id="confirmOverlay">
+    <div class="modal modal-sm">
+      <div class="modal-body" id="confirmMessage">Are you completely sure you want to perform this action?</div>
+      <div class="modal-body hidden" id="confirmExtraContainer" style="padding-top: 0; padding-bottom: 12px;"></div>
+      <div class="modal-foot" style="background:transparent; padding-top:0;">
+        <button class="btn btn-ghost" id="confirmNo">No</button>
+        <button class="btn btn-primary" id="confirmYes">Yes</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <!-- APPLICATION CORE ARCHITECTURE ENGINE LOGIC -->
+  
+  <!-- Tách các file JS (Modules) -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/modals.js"></script>
+  <script src="assets/js/auth.js"></script>
+
+</body>
+
+</html>
