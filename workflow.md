@@ -305,7 +305,7 @@
   - Hiển thị rõ ràng tên task, ngày hoàn thành, project.
   - Giữ nút Restore cho mỗi task.
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[x]` Đã hoàn thành
+- **Trạng thái:** `[ ]` Chưa làm
 
 ---
 
@@ -315,7 +315,7 @@
   - Đổi text trong `.onboarding-header h2` từ "Good morning" → **"Hello"**.
   - Ví dụ: "Hello. Let's plan your week."
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[x]` Đã hoàn thành
+- **Trạng thái:** `[ ]` Chưa làm
 
 ---
 
@@ -326,7 +326,7 @@
   - Đảm bảo `targetTaskDate` được gán chính xác là ngày đang xem trong Day Detail.
   - Test: mở Day View ngày Thứ Ba → thêm task → task chỉ xuất hiện ở Thứ Ba.
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[x]` Đã hoàn thành
+- **Trạng thái:** `[ ]` Chưa làm
 
 ---
 
@@ -337,7 +337,7 @@
   - Cập nhật cả phần per-day breakdown để chỉ đếm task chính.
   - Hiển thị: "X of Y tasks complete" — chỉ tính task chính.
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[x]` Đã hoàn thành
+- **Trạng thái:** `[ ]` Chưa làm
 
 ---
 
@@ -347,8 +347,8 @@
   - Xóa option `-- No Category / Personal --` khỏi dropdown `taskSubjSelect`.
   - Nếu chưa có project nào → hiển thị thông báo yêu cầu tạo project trước.
   - Validate: không cho save task nếu chưa chọn project.
-- **File liên quan:** `index (1).html`
-- **Trạng thái:** `[x]` Đã hoàn thành
+- **File liên quan:** `index.html`
+- **Trạng thái:** `[ ]` Chưa làm
 
 ---
 
@@ -358,8 +358,8 @@
   - Trong `toggleTaskStatus()`, trước khi tạo task lặp mới, kiểm tra kỹ xem đã tồn tại task cùng `title` + cùng `date` (ngày tiếp theo) + chưa done hay chưa.
   - Nếu đã tồn tại → **không tạo thêm**, chỉ toast thông báo "Task lặp lại đã tồn tại".
   - Kiểm tra cả trường hợp task bị uncheck rồi check lại nhiều lần liên tục.
-- **File liên quan:** `index (1).html`
-- **Trạng thái:** `[x]` Đã hoàn thành
+- **File liên quan:** `index.html`
+- **Trạng thái:** `[ ]` Chưa làm
 
 ---
 
@@ -370,20 +370,61 @@
   - Cập nhật cả sidebar counts (`cntAll`, `cntPending`, `cntDone`) để chỉ đếm task chính.
   - Đảm bảo nhất quán: progress bar, sidebar counts, và Stats đều chỉ đếm task chính.
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[x]` Đã hoàn thành
+- **Trạng thái:** `[ ]` Chưa làm
 
 ---
 
-### 34. 🐛 Sửa lỗi 2 thanh scrollbar lồng nhau ở Archive
-- **Mô tả:** Trong modal Archive (Completed Tasks) bị xuất hiện 2 thanh scrollbar dọc lồng nhau. Nguyên nhân do class `.modal-body` cha đã có sẵn thuộc tính `max-height` và `overflow-y: auto`, nhưng nội dung lưới (grid) bên trong lại tiếp tục bị ép thêm một lớp `max-height: 400px` và `overflow-y: auto` nữa.
-- **Cách sửa:** Xóa bỏ thuộc tính `max-height: 400px; overflow-y: auto;` ở thẻ `div` bọc danh sách dạng Grid trong sự kiện onClick của nút `archiveBtn`. Việc cuộn danh sách lúc này sẽ được quản lý tự nhiên bởi thẻ `.modal-body` ngoài cùng giống như các popup khác.
-- **File liên quan:** `index(1).html`
-- **Trạng thái:** `[ ]` Chưa làm
-### 35. 🐛 Sửa lỗi nhân bản task lặp lại do Race Condition (Double-click)
-- **Mô tả:** Khi đánh dấu hoàn thành một task lặp lại (weekly), hệ thống tốn thời gian chờ server phản hồi. Vì giao diện không hiển thị dấu check ngay lập tức và không khóa nút bấm, người dùng dễ tưởng mạng lag nên bấm đúp (double-click). Các luồng gọi API chạy đồng thời do chưa nhận được data mới đều thấy task tuần sau chưa tồn tại, từ đó cùng ra lệnh Insert gây ra lỗi nhân bản 2 hoặc nhiều task ở tuần tiếp theo.
-- **Cách sửa:** Cập nhật cơ chế Optimistic UI cho hàm `toggleTaskStatus`. Tạo biến `processingTasks = new Set()` để lưu id và khóa task đang xử lý, chặn các thao tác click tiếp theo. Đồng thời cập nhật trạng thái `t.done` và gọi `renderAll()` để render lại UI ngay lập tức, sau đó mới `await` gọi API và tính toán tạo task lặp lại. Cuối cùng mới mở khóa.
+### 34. 🔔 Sửa thời gian nhắc nhở Reminder: 24h, 12h, 1h, đến hạn
+- **Mô tả:** Hiện tại reminder chỉ gửi thông báo trước 15 phút, 5 phút, và đúng giờ. Cần thay đổi thành các mốc thời gian lớn hơn: 24 giờ, 12 giờ, 1 giờ, và đến hạn.
+- **Yêu cầu:**
+  - Thay đổi logic trong `startNotificationDaemon()`:
+    - Trước **24 giờ** → thông báo "24 hours remaining"
+    - Trước **12 giờ** → thông báo "12 hours remaining"
+    - Trước **1 giờ** → thông báo "1 hour remaining"
+    - **Đúng giờ** → thông báo "DUE NOW"
+  - Vẫn chỉ áp dụng cho task có `priority = 'urgent'`.
+  - Cập nhật key tracking trong `notifiedTasks` Set cho các mốc mới.
+- **File liên quan:** `index.html`
+- **Trạng thái:** `[x]` Đã làm
+
+---
+
+### 35. ⏱️ Tăng thời gian hiển thị toast notification lên 7 giây
+- **Mô tả:** Toast notification hiện tại biến mất quá nhanh (khoảng 3 giây), đặc biệt với thông báo reminder cần người dùng đọc kịp.
+- **Yêu cầu:**
+  - Tăng thời gian hiển thị toast từ `3000ms` lên **`7000ms`** (7 giây).
+  - Hoặc tạo toast type riêng cho reminder với thời gian dài hơn, giữ toast thường ở 3-4 giây.
+  - Đảm bảo animation `toastOut` vẫn mượt khi ẩn đi.
 - **File liên quan:** `index.html`
 - **Trạng thái:** `[ ]` Chưa làm
+
+---
+
+### 36. ➡️ Thêm nút "Next Week" bên cạnh "This Week"
+- **Mô tả:** Hiện tại chỉ có nút "This Week" để nhảy về tuần hiện tại. Cần thêm nút "Next Week" bên cạnh để người dùng nhanh chóng chuyển sang tuần tiếp theo.
+- **Yêu cầu:**
+  - Thêm nút **"Next Week"** ngay bên cạnh nút "This Week" trên header.
+  - Click → set `weekOffset = 1` và `renderAll()`.
+  - Style giống nút "This Week" (dùng class `btn-tool`).
+- **File liên quan:** `index.html`
+- **Trạng thái:** `[ ]` Chưa làm
+
+---
+
+### 37. 🗑️ Bỏ toàn bộ phần Group trong file index
+- **Mô tả:** File index hiện tại chứa nhiều code liên quan đến Team Groups (tạo group, join group, manage group, group members, group tasks...) nhưng không cần dùng. Cần xóa sạch để giảm file size và tránh nhầm lẫn.
+- **Yêu cầu:**
+  - Xóa toàn bộ HTML liên quan đến group: modal `groupOverlay`, sidebar group section (đã comment), các nút create/join group.
+  - Xóa toàn bộ CSS liên quan đến group (nếu có riêng).
+  - Xóa toàn bộ JS liên quan: `loadGroups()`, `groupMembersCache`, `renderManageGroupList()`, `selectManageGroup()`, `groupSaveBtn`, `groupLeaveBtn`, biến `groups`, `groupFilter`, `groupModalMode`, `activeManageGroupId`.
+  - Cập nhật `loadAll()` để không gọi `loadGroups()`.
+  - Cập nhật `subscribeRealtime()` để không subscribe bảng `groups` và `group_members`.
+  - Cập nhật `populateSpaceDropdown()` để không hiện group options.
+  - Test: đảm bảo app vẫn hoạt động bình thường sau khi xóa toàn bộ group code.
+- **File liên quan:** `index.html`
+- **Trạng thái:** `[ ]` Chưa làm
+
+---
 
 ## Thứ Tự Ưu Tiên Triển Khai
 

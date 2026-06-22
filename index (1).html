@@ -4133,31 +4133,38 @@
       }
 
       setInterval(() => {
-        const todayStrNow = todayStr();
         const now = new Date();
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
         tasks.forEach(t => {
-          if (t.done || t.date !== todayStrNow || !t.due_time) return;
+          if (t.done || !t.date || !t.due_time) return;
           // Mục 9: Chỉ nhắc nhở cho task Urgent
           if (t.priority !== 'urgent') return;
 
-          const [h, m] = t.due_time.split(':').map(Number);
-          const taskMinutes = h * 60 + m;
-          const diff = taskMinutes - currentMinutes;
+          const timePart = t.due_time.length === 5 ? t.due_time + ':00' : t.due_time;
+          const taskDate = new Date(`${t.date}T${timePart}`);
+          if (isNaN(taskDate.getTime())) return;
+          
+          const diffMs = taskDate.getTime() - now.getTime();
+          const diffMinutes = Math.round(diffMs / 60000);
 
-          // Fire reminders at 15min, 5min, and 0min
-          const key15 = t.id + '_15';
-          const key5 = t.id + '_5';
+          if (diffMinutes < -2) return; // Đã quá hạn hơn 2 phút
+
+          // Fire reminders at 24h, 12h, 1h, and 0min
+          const key24h = t.id + '_24h';
+          const key12h = t.id + '_12h';
+          const key1h = t.id + '_1h';
           const key0 = t.id + '_0';
 
-          if (diff <= 15 && diff > 5 && !notifiedTasks.has(key15)) {
-            notifiedTasks.add(key15);
-            triggerVisualNotification(t, 'in 15 minutes');
-          } else if (diff <= 5 && diff > 0 && !notifiedTasks.has(key5)) {
-            notifiedTasks.add(key5);
-            triggerVisualNotification(t, 'in 5 minutes');
-          } else if (diff <= 0 && diff > -2 && !notifiedTasks.has(key0)) {
+          if (diffMinutes <= 24 * 60 && diffMinutes > 12 * 60 && !notifiedTasks.has(key24h)) {
+            notifiedTasks.add(key24h);
+            triggerVisualNotification(t, '24 hours remaining');
+          } else if (diffMinutes <= 12 * 60 && diffMinutes > 60 && !notifiedTasks.has(key12h)) {
+            notifiedTasks.add(key12h);
+            triggerVisualNotification(t, '12 hours remaining');
+          } else if (diffMinutes <= 60 && diffMinutes > 0 && !notifiedTasks.has(key1h)) {
+            notifiedTasks.add(key1h);
+            triggerVisualNotification(t, '1 hour remaining');
+          } else if (diffMinutes <= 0 && diffMinutes >= -2 && !notifiedTasks.has(key0)) {
             notifiedTasks.add(key0);
             triggerVisualNotification(t, 'DUE NOW');
           }
