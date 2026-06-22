@@ -62,6 +62,8 @@
         noBtn.textContent = 'No';
         noBtn.onclick = () => hideOverlay('confirmOverlay');
       }
+      const modal = $('confirmOverlay').querySelector('.modal');
+      if (modal) modal.classList.remove('stats-modal');
       const extra = $('confirmExtraContainer');
       if (extra) {
         extra.classList.add('hidden');

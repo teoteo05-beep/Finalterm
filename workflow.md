@@ -426,6 +426,29 @@
 
 ---
 
+### 38. Lỗi Repeat Weekly: task lặp không hiển thị tuần sau
+- **Mô tả:** Khi tạo task mới chọn Repeat = Weekly, task chỉ hiển thị ở tuần hiện tại. Các tuần sau không thấy task cho tới khi đánh dấu (tick) hoàn thành ở tuần hiện tại — lúc đó các tuần sau mới xuất hiện task lặp.
+- **Yêu cầu:**
+  - Khi tạo task với repeat_mode = 'weekly', lưu repeat_mode vào DB và/hoặc tạo occurrence cho tuần tiếp theo ngay lập tức (hoặc triển khai render động: khi hiển thị tuần X, compute và hiển thị task lặp dựa trên repeat_mode mà không cần tạo bản ghi mới).
+  - Hoặc sửa toggleTaskStatus() để chỉ tạo occurrence khi tick done (nếu đó là ý định), nhưng đồng thời đảm bảo renderer tuần sẽ hiển thị task lặp cho các tuần sau dựa trên repeat_mode nếu occurrence chưa được tạo.
+  - Thêm test tái tạo: tạo task weekly → kiểm tra DB repeat_mode → kiểm tra render tuần kế bên có hiển thị.
+- **File liên quan:** `ui.js`
+- **Trạng thái:** `[x]` Đã làm
+
+---
+
+### 39.📈 Yêu cầu công việc — Thêm đồ thị hoàn thành trong STATS
+- **Mô tả:** Phần STATS hiện chỉ hiển thị số liệu dạng text. Cần bổ sung thêm một biểu đồ thanh/đường thể hiện mức độ hoàn thành task theo từng ngày trong tuần để người dùng có cái nhìn trực quan hơn khi sắp xếp nhiệm vụ.
+- **Yêu cầu:**
+  - Thêm component đồ thị vào panel STATS.
+  - Mỗi ngày trong tuần hiển thị: số task hoàn thành / tổng số task, dưới dạng thanh hoặc biểu đồ đường.
+  - Màu sắc rõ ràng: hoàn thành xanh, chưa hoàn thành xám/nâu.
+  - Hiển thị ngày ngắn (Mon, Tue, Wed...) dưới trục hoành.
+  - Hiển thị % hoàn thành hoặc số X/Y trên mỗi cột/điểm.
+  - Cập nhật dữ liệu động khi đổi tuần, lọc Pending/Done, hoặc khi task được chỉnh sửa.
+- **File liên quan:** `index.html, ui.js`
+- **Trạng thái:** `[ ]` Chưa làm
+
 ## Thứ Tự Ưu Tiên Triển Khai
 
 | STT | Công việc | Độ ưu tiên | Độ phức tạp | File |
