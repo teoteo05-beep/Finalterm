@@ -5,6 +5,41 @@
 /* ============================================================
    UI PRESENTATION LAYER RENDER METHODS
     ============================================================ */
+    // Helper: determine if a recurring task should occur on a target date
+    function taskOccursOnDate(task, dateStr) {
+      if (!task || !task.date) return false;
+      if (task.date === dateStr) return true;
+      if (!task.repeat_mode || task.repeat_mode === 'none') return false;
+
+      const start = new Date(task.date);
+      const target = new Date(dateStr);
+      if (target < start) return false;
+
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const diffDays = Math.floor((target - start) / msPerDay);
+
+      if (task.repeat_mode === 'daily') return true;
+      if (task.repeat_mode === 'weekly') return diffDays % 7 === 0;
+      if (task.repeat_mode === 'monthly') {
+        // simple monthly rule: same day-of-month (fallback: ignore complex month-end rules)
+        return start.getDate() === target.getDate();
+      }
+      return false;
+    }
+
+    // Build list of task occurrences for a given date (includes explicit DB tasks and virtual recurring ones)
+    function getOccurrencesForDate(dateStr) {
+      // explicit tasks saved in DB for that date (root tasks only)
+      const explicit = tasks.filter(t => t.date === dateStr && !t.parent_id);
+
+      // virtual recurring occurrences: tasks that start earlier and have repeat_mode such that they fall on dateStr
+      const virtuals = tasks.filter(t => !t.parent_id && t.repeat_mode && t.repeat_mode !== 'none' && new Date(t.date) < new Date(dateStr) && taskOccursOnDate(t, dateStr))
+        // avoid duplicate if an explicit occurrence exists with same title+subject
+        .filter(t => !explicit.some(e => e.title === t.title && e.subject_id === t.subject_id))
+        .map(t => Object.assign({}, t, { date: dateStr, _virtual: true }));
+
+      return explicit.concat(virtuals);
+    }
     function renderAll() {
       renderWeekLabel();
       renderSidebar();
@@ -34,13 +69,19 @@
     function renderSidebar() {
       const base = new Date();
       base.setDate(base.getDate() + weekOffset * 7);
-      const monStr = toDateStr(getMonday(base));
-      const sun = getMonday(base); sun.setDate(sun.getDate() + 6);
-      const sunStr = toDateStr(sun);
+      const mon = getMonday(base);
+      const dates = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(mon);
+        d.setDate(mon.getDate() + i);
+        dates.push(toDateStr(d));
+      }
 
-      // Week root tasks, excluding subtasks
-      const weekRootTasks = tasks.filter(t => t.date >= monStr && t.date <= sunStr && !t.parent_id);
-      const personalWeekTasks = weekRootTasks;
+      // Build occurrences for the week (includes explicit DB tasks and virtual recurring ones)
+      let weekOccurrences = [];
+      dates.forEach(d => { weekOccurrences = weekOccurrences.concat(getOccurrencesForDate(d)); });
+
+      const personalWeekTasks = weekOccurrences;
 
       $('cntAll').textContent = personalWeekTasks.length;
       $('cntPending').textContent = personalWeekTasks.filter(t => !t.done).length;
@@ -114,19 +155,15 @@
       };
 
       const mon = getMonday(base);
-      const sun = new Date(mon);
-      sun.setDate(mon.getDate() + 6);
+      const dates = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(mon);
+        d.setDate(mon.getDate() + i);
+        dates.push(d.toISOString().split('T')[0]);
+      }
 
-      // Format date to YYYY-MM-DD to match task data
-      const toDateStr = (d) => d.toISOString().split('T')[0];
-      const monStr = toDateStr(mon);
-      const sunStr = toDateStr(sun);
-
-      // 3. Filter all root task entries that belong to the current week
-      // Note: change the tasks variable below if your task array uses a different name (e.g. state.tasks)
-      const currentWeekTasks = (typeof tasks !== 'undefined' ? tasks : []).filter(t => {
-        return t.date >= monStr && t.date <= sunStr && !t.parent_id;
-      });
+      let currentWeekTasks = [];
+      dates.forEach(d => { currentWeekTasks = currentWeekTasks.concat(getOccurrencesForDate(d)); });
 
       const total = currentWeekTasks.length;
       const doneCount = currentWeekTasks.filter(t => t.done).length;
@@ -164,14 +201,14 @@
         const ds = toDateStr(day);
         const isToday = ds === todayStr();
 
-        const dayTasks = tasks.filter(t => {
-          if (t.date !== ds) return false;
-
-          if (listFilter && t.subject_id !== listFilter) return false;
-          if (filterMode === 'pending') return !t.done;
-          if (filterMode === 'done') return t.done;
-          return true;
-        });
+          // Get occurrences for this date (explicit + virtual recurring)
+          let dayTasks = getOccurrencesForDate(ds);
+          dayTasks = dayTasks.filter(t => {
+            if (listFilter && t.subject_id !== listFilter) return false;
+            if (filterMode === 'pending') return !t.done;
+            if (filterMode === 'done') return t.done;
+            return true;
+          });
         const showAddButton = true;
 
         const col = document.createElement('div');
