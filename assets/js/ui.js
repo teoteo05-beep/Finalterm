@@ -750,7 +750,7 @@
        ARCHIVE — show & restore completed tasks
     ============================================================ */
     $('archiveBtn').onclick = () => {
-      const doneTasks = tasks.filter(t => t.done);
+      const doneTasks = tasks.filter(t => t.done && !t.parent_id);
 
       if (!doneTasks.length) {
         toast('No completed tasks to archive.', 'info');
