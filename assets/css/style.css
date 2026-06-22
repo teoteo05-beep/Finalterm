@@ -110,8 +110,7 @@
     }
 
     .auth-card {
-      /* Background image from project root: "anh nen login.jfif" */
-      background: linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url('../../anh%20nen%20login.jfif') center/cover no-repeat, var(--paper);
+      background: var(--paper);
       border: 1px solid var(--line);
       border-radius: var(--r);
       padding: 34px 28px;
@@ -122,7 +121,6 @@
       flex-direction: column;
       gap: 18px;
       position: relative;
-      color: #fff; /* ensure text contrasts with background */
     }
 
     .auth-brand {
