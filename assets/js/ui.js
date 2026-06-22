@@ -51,9 +51,9 @@
       listContainer.innerHTML = '';
       lists.forEach(l => {
         const count = personalWeekTasks.filter(t => t.subject_id === l.id).length;
-        const btn = document.createElement('button');
+        const btn = document.createElement('div');
         btn.className = `list-item ${listFilter === l.id ? 'active' : ''}`;
-        btn.onclick = () => { listFilter = (listFilter === l.id) ? null : l.id; renderAll(); };
+        btn.addEventListener('click', () => { listFilter = (listFilter === l.id) ? null : l.id; renderAll(); });
         btn.innerHTML = `
           <span class="list-dot" style="background:${l.color}"></span>
           <span class="list-name">${escapeHtml(l.name)}</span>

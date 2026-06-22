@@ -47,7 +47,6 @@
       editingListId = null;
       $('listModalTitle').textContent = 'Create a Project List';
       $('listNameInput').value = '';
-      $('listDeleteBtn').classList.add('hidden');
       $('listSaveBtn').textContent = 'Create List';
       selColor = LIST_COLORS[0];
       renderSwatches();
@@ -74,7 +73,6 @@
       $('listNameInput').value = list.name || '';
       selColor = list.color || LIST_COLORS[0];
       renderSwatches();
-      $('listDeleteBtn').classList.remove('hidden');
       $('listSaveBtn').textContent = 'Save Changes';
       showOverlay('listOverlay');
     }
@@ -99,20 +97,6 @@
       loadAll();
     };
 
-    $('listDeleteBtn').onclick = () => {
-      if (!editingListId) return;
-      const list = lists.find(l => l.id === editingListId);
-      if (!list) return;
-
-      confirmAction(`Delete "${list.name}" list? Tasks in this list will not be deleted.`, async () => {
-        const { error } = await db.from('subjects').delete().eq('id', editingListId);
-        if (error) return toast('Error deleting list.', 'err');
-        toast('List deleted.', 'ok');
-        hideOverlay('listOverlay');
-        editingListId = null;
-        loadAll();
-      });
-    };
 
     /* ============================================================
        OVERLAY CONTROL LAYER SYSTEM FUNCTIONS
