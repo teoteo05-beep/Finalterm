@@ -72,7 +72,7 @@
               <span>Delete all tasks inside this project</span>
             </label>
           `;
-          confirmAction(`Delete project "${l.name}"?`, async () => {
+          confirmAction(`Delete Project "${l.name}"? All tasks in the project will be deleted.`, async () => {
             const deleteTasks = $('deleteProjectTasksCheck') && $('deleteProjectTasksCheck').checked;
             if (deleteTasks) {
               const { error: taskErr } = await db.from('tasks').delete().eq('subject_id', l.id);
