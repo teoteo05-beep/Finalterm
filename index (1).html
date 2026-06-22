@@ -3640,10 +3640,10 @@
       });
     };
 
-    function toast(msg, type = 'ok') {
+    function toast(msg, type = 'ok', duration = 3000) {
       const el = document.createElement('div'); el.className = `toast ${type}`; el.textContent = msg;
       $('toastWrap').appendChild(el);
-      setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 220); }, 3000);
+      setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 220); }, duration);
     }
 
     function escapeHtml(str) {
@@ -4174,7 +4174,7 @@
 
     function triggerVisualNotification(task, timeLabel) {
       const alertMessage = `🔔 URGENT: "${task.title}" — ${timeLabel} (${task.due_time.substring(0, 5)})`;
-      toast(alertMessage, 'err');
+      toast(alertMessage, 'err', 7000);
 
       if (window.Notification && Notification.permission === 'granted') {
         new Notification('⚡ Planner — Task Urgent', { body: alertMessage, icon: '📓' });

@@ -396,7 +396,7 @@
   - Hoặc tạo toast type riêng cho reminder với thời gian dài hơn, giữ toast thường ở 3-4 giây.
   - Đảm bảo animation `toastOut` vẫn mượt khi ẩn đi.
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã làm
 
 ---
 
