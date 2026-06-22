@@ -407,7 +407,7 @@
   - Click → set `weekOffset = 1` và `renderAll()`.
   - Style giống nút "This Week" (dùng class `btn-tool`).
 - **File liên quan:** `index.html`
-- **Trạng thái:** `[ ]` Chưa làm
+- **Trạng thái:** `[x]` Đã làm
 
 ---
 

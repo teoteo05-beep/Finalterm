@@ -1894,6 +1894,7 @@
           <span class="week-relative" id="weekRelative">This week</span>
         </div>
         <button class="btn-tool" id="weekTodayBtn" title="Jump to current week">This Week</button>
+        <button class="btn-tool" id="weekNextBtn" title="Jump to next week">Next Week</button>
       </div>
 
       <div class="header-tools">
@@ -3656,6 +3657,7 @@
     $('weekPrev').onclick = () => { weekOffset--; $('searchInput').value = ''; renderAll(); };
     $('weekNext').onclick = () => { weekOffset++; $('searchInput').value = ''; renderAll(); };
     $('weekTodayBtn').onclick = () => { weekOffset = 0; $('searchInput').value = ''; renderAll(); };
+    $('weekNextBtn').onclick = () => { weekOffset = 1; $('searchInput').value = ''; renderAll(); };
 
     if ($('deleteAllTasksBtn')) {
       $('deleteAllTasksBtn').addEventListener('click', () => {
